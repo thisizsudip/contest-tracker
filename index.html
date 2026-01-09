@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Coding Contest Tracker</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body {
+            background-color: #0f172a;
+            color: white;
+        }
+        .contest-card {
+            transition: transform 0.2s, border-color 0.2s;
+            border: 1px solid #1e293b;
+        }
+        .contest-card:hover {
+            transform: translateY(-5px);
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+
+<body class="p-4 md:p-8">
+    <div class="max-w-5xl mx-auto">
+
+        <!-- Header -->
+        <header class="mb-10 text-center">
+            <h1 class="text-4xl font-bold text-blue-400 mb-2">
+                Upcoming Coding Contests
+            </h1>
+            <p class="text-slate-400">
+                Next 7 days · Famous platforms only
+            </p>
+            <div id="status" class="mt-4 text-sm text-slate-500 italic">
+                Fetching contests...
+            </div>
+        </header>
+
+        <!-- Contest List -->
+        <div id="contest-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+
+    </div>
+
+    <script>
+        const USERNAME = 'WhatADrag';
+        const API_KEY = 'c337ee2f074d30a050ba4bfab4e8664c6af388b0';
+
+        const API_URL =
+            `https://clist.by/api/v4/contest/?username=${USERNAME}&api_key=${API_KEY}&upcoming=true&order_by=start`;
+
+        // Famous platforms we want
+        const ALLOWED_PLATFORMS = [
+            'codeforces',
+            'codechef',
+            'atcoder',
+            'leetcode',
+            'hackerrank',
+            'hackerearth',
+            'topcoder',
+            'google',
+            'meta',
+            'facebook'
+        ];
+
+        async function fetchContests() {
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+
+                const now = new Date();
+                const sevenDaysLater = new Date();
+                sevenDaysLater.setDate(now.getDate() + 7);
+
+                const filtered = data.objects.filter(contest => {
+                    const start = new Date(contest.start);
+                    const resource = contest.resource.toLowerCase();
+
+                    const isAllowedPlatform = ALLOWED_PLATFORMS.some(p =>
+                        resource.includes(p)
+                    );
+
+                    return (
+                        start >= now &&
+                        start <= sevenDaysLater &&
+                        isAllowedPlatform
+                    );
+                });
+
+                filtered.sort(
+                    (a, b) => new Date(a.start) - new Date(b.start)
+                );
+
+                displayContests(filtered);
+
+                document.getElementById('status').innerText =
+                    `Showing ${filtered.length} contests · Updated at ${new Date().toLocaleTimeString()}`;
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('status').innerText =
+                    'Failed to load contests';
+            }
+        }
+
+        function getTimeRemaining(startTime) {
+            const now = new Date();
+            const start = new Date(startTime);
+            const diffMs = start - now;
+
+            if (diffMs <= 0) return 'Starting now';
+
+            const minutes = Math.floor(diffMs / 60000);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (minutes < 60) {
+                return `Starts in ${minutes} minutes`;
+            }
+            if (hours < 24) {
+                return `Starts in ${hours} hours`;
+            }
+            return `Starts in ${days} days`;
+        }
+
+        function displayContests(contests) {
+            const container = document.getElementById('contest-list');
+            container.innerHTML = '';
+
+            if (contests.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center text-slate-400">
+                        No famous-platform contests in the next 7 days 🚀
+                    </div>
+                `;
+                return;
+            }
+
+            contests.forEach(contest => {
+                const startTime = new Date(contest.start).toLocaleString();
+                const durationHours = Math.floor(contest.duration / 3600);
+                const remaining = getTimeRemaining(contest.start);
+
+                const card = document.createElement('div');
+                card.className =
+                    'contest-card bg-slate-800 p-6 rounded-xl shadow-lg flex flex-col justify-between';
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="bg-blue-900 text-blue-200 text-xs font-bold px-2.5 py-0.5 rounded">
+                                ${contest.resource}
+                            </span>
+                            <span class="text-slate-400 text-xs">
+                                ${durationHours} Hours
+                            </span>
+                        </div>
+
+                        <h2 class="text-xl font-semibold mb-1">
+                            ${contest.event}
+                        </h2>
+
+                        <p class="text-blue-400 text-sm font-medium mb-2">
+                            ${remaining}
+                        </p>
+
+                        <p class="text-slate-400 text-sm">
+                            Starts at: ${startTime}
+                        </p>
+                    </div>
+
+                    <a href="${contest.href}" target="_blank"
+                       class="block mt-4 text-center bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded transition">
+                        Register / View
+                    </a>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        fetchContests();
+        setInterval(fetchContests, 30 * 60 * 1000);
+    </script>
+</body>
+</html>
