@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Coding Contest Tracker</title>
 
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e293b">
+
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
@@ -26,7 +30,6 @@
 <body class="p-4 md:p-8">
 <div class="max-w-5xl mx-auto">
 
-    <!-- Header -->
     <header class="mb-10 text-center">
         <h1 class="text-4xl font-bold text-blue-400 mb-2">
             Upcoming Coding Contests
@@ -39,166 +42,141 @@
         </div>
     </header>
 
-    <!-- Contest List -->
     <div id="contest-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
 
 </div>
 
 <script>
-    const USERNAME = 'WhatADrag';
-    const API_KEY = 'c337ee2f074d30a050ba4bfab4e8664c6af388b0';
+/* ================= PWA SERVICE WORKER ================= */
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js");
+}
 
-    const API_URL =
-        `https://clist.by/api/v4/contest/?username=${USERNAME}&api_key=${API_KEY}&upcoming=true&order_by=start`;
+/* ================= CONFIG ================= */
+const USERNAME = 'WhatADrag';
+const API_KEY = 'c337ee2f074d30a050ba4bfab4e8664c6af388b0';
 
-    const ALLOWED_PLATFORMS = [
-        'codeforces',
-        'codechef',
-        'atcoder',
-        'leetcode',
-        'hackerrank',
-        'hackerearth',
-        'topcoder',
-        'google',
-        'meta',
-        'facebook'
-    ];
+const API_URL =
+`https://clist.by/api/v4/contest/?username=${USERNAME}&api_key=${API_KEY}&upcoming=true&order_by=start`;
 
-    /* ================= DAILY COLOR LIST ================= */
-    const DAILY_COLORS = [
-        "#000000","#040720","#34282C","#3B3131","#5C5858","#696969",
-        "#808080","#A9A9A9","#D3D3D3","#FFD700","#FF8C00","#FF4500",
-        "#DC143C","#FF69B4","#8A2BE2","#6A5ACD","#4169E1","#1E90FF",
-        "#00BFFF","#00CED1","#20B2AA","#3CB371","#32CD32","#7FFF00",
-        "#ADFF2F","#FFFF00","#F4A460","#CD853F","#A0522D","#8B4513"
-        // 🔥 You can add ALL your hex colors here safely
-    ];
+const ALLOWED_PLATFORMS = [
+    'codeforces','codechef','atcoder','leetcode',
+    'hackerrank','hackerearth','topcoder','google','meta'
+];
 
-    function getDailyColor() {
-        const today = new Date().toISOString().slice(0, 10);
-        const saved = localStorage.getItem("dailyColor");
+/* ================= DAILY COLORS ================= */
+const DAILY_COLORS = [
+    "#000000","#3B3131","#696969","#808080","#A9A9A9",
+    "#FFD700","#FF8C00","#FF4500","#DC143C",
+    "#8A2BE2","#6A5ACD","#4169E1","#1E90FF",
+    "#00CED1","#20B2AA","#32CD32","#7FFF00",
+    "#FFFF00","#F4A460","#8B4513"
+];
 
-        if (saved) {
-            const { date, color } = JSON.parse(saved);
-            if (date === today) return color;
-        }
+function getDailyColor() {
+    const today = new Date().toISOString().slice(0, 10);
+    const saved = localStorage.getItem("dailyColor");
 
-        const color =
-            DAILY_COLORS[Math.floor(Math.random() * DAILY_COLORS.length)];
-
-        localStorage.setItem(
-            "dailyColor",
-            JSON.stringify({ date: today, color })
-        );
-
-        return color;
+    if (saved) {
+        const { date, color } = JSON.parse(saved);
+        if (date === today) return color;
     }
 
-    const DAILY_BUTTON_COLOR = getDailyColor();
+    const color = DAILY_COLORS[Math.floor(Math.random() * DAILY_COLORS.length)];
+    localStorage.setItem("dailyColor", JSON.stringify({ date: today, color }));
+    return color;
+}
 
-    async function fetchContests() {
-        try {
-            const response = await fetch(API_URL);
-            const data = await response.json();
+const BUTTON_COLOR = getDailyColor();
 
-            const now = new Date();
-            const sevenDaysLater = new Date();
-            sevenDaysLater.setDate(now.getDate() + 7);
+/* ================= DATA FETCH ================= */
+async function fetchContests() {
+    try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
 
-            const filtered = data.objects.filter(contest => {
-                const start = new Date(contest.start);
-                const resource = contest.resource.toLowerCase();
+        const now = new Date();
+        const limit = new Date();
+        limit.setDate(now.getDate() + 7);
 
-                const isAllowedPlatform = ALLOWED_PLATFORMS.some(p =>
-                    resource.includes(p)
-                );
-
-                return start >= now && start <= sevenDaysLater && isAllowedPlatform;
-            });
-
-            filtered.sort((a, b) => new Date(a.start) - new Date(b.start));
-
-            displayContests(filtered);
-
-            document.getElementById('status').innerText =
-                `Showing ${filtered.length} contests · Updated at ${new Date().toLocaleTimeString()}`;
-
-        } catch (error) {
-            console.error(error);
-            document.getElementById('status').innerText =
-                'Failed to load contests';
-        }
-    }
-
-    function getTimeRemaining(startTime) {
-        const diff = new Date(startTime) - new Date();
-
-        if (diff <= 0) return 'Starting now';
-
-        const minutes = Math.floor(diff / 60000);
-        const hours = Math.floor(minutes / 60);
-        const days = Math.floor(hours / 24);
-
-        if (minutes < 60) return `Starts in ${minutes} minutes`;
-        if (hours < 24) return `Starts in ${hours} hours`;
-        return `Starts in ${days} days`;
-    }
-
-    function displayContests(contests) {
-        const container = document.getElementById('contest-list');
-        container.innerHTML = '';
-
-        if (!contests.length) {
-            container.innerHTML = `
-                <div class="col-span-full text-center text-slate-400">
-                    No famous-platform contests in the next 7 days 🚀
-                </div>
-            `;
-            return;
-        }
-
-        contests.forEach(contest => {
-            const card = document.createElement('div');
-            card.className =
-                'contest-card bg-slate-800 p-6 rounded-xl shadow-lg flex flex-col justify-between';
-
-            card.innerHTML = `
-                <div>
-                    <div class="flex justify-between mb-4">
-                        <span class="bg-blue-900 text-blue-200 text-xs font-bold px-2.5 py-0.5 rounded">
-                            ${contest.resource}
-                        </span>
-                        <span class="text-slate-400 text-xs">
-                            ${Math.floor(contest.duration / 3600)} Hours
-                        </span>
-                    </div>
-
-                    <h2 class="text-xl font-semibold mb-1">${contest.event}</h2>
-
-                    <p class="text-blue-400 text-sm font-medium mb-2">
-                        ${getTimeRemaining(contest.start)}
-                    </p>
-
-                    <p class="text-slate-400 text-sm">
-                        Starts at: ${new Date(contest.start).toLocaleString()}
-                    </p>
-                </div>
-
-                <a href="${contest.href}" target="_blank"
-                   style="background-color:${DAILY_BUTTON_COLOR}; color:black;"
-                   class="block mt-4 text-center font-bold py-2 px-4 rounded transition hover:scale-105 shadow-lg">
-                    Register / View
-                </a>
-            `;
-
-            container.appendChild(card);
+        const contests = data.objects.filter(c => {
+            const start = new Date(c.start);
+            const platform = c.resource.toLowerCase();
+            return start >= now &&
+                   start <= limit &&
+                   ALLOWED_PLATFORMS.some(p => platform.includes(p));
         });
+
+        contests.sort((a, b) => new Date(a.start) - new Date(b.start));
+        renderContests(contests);
+
+        document.getElementById("status").innerText =
+            `Showing ${contests.length} contests · Updated ${new Date().toLocaleTimeString()}`;
+    } catch {
+        document.getElementById("status").innerText = "Failed to load contests";
+    }
+}
+
+function timeRemaining(start) {
+    const diff = new Date(start) - new Date();
+    if (diff <= 0) return "Starting now";
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `Starts in ${mins} minutes`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `Starts in ${hrs} hours`;
+    return `Starts in ${Math.floor(hrs / 24)} days`;
+}
+
+function renderContests(contests) {
+    const container = document.getElementById("contest-list");
+    container.innerHTML = "";
+
+    if (!contests.length) {
+        container.innerHTML =
+            `<div class="col-span-full text-center text-slate-400">
+                No contests in the next 7 days 🚀
+            </div>`;
+        return;
     }
 
-    fetchContests();
-    setInterval(fetchContests, 30 * 60 * 1000);
+    contests.forEach(c => {
+        const card = document.createElement("div");
+        card.className =
+            "contest-card bg-slate-800 p-6 rounded-xl shadow-lg flex flex-col justify-between";
+
+        card.innerHTML = `
+            <div>
+                <div class="flex justify-between mb-4">
+                    <span class="bg-blue-900 text-blue-200 text-xs font-bold px-2.5 py-0.5 rounded">
+                        ${c.resource}
+                    </span>
+                    <span class="text-slate-400 text-xs">
+                        ${Math.floor(c.duration / 3600)} hrs
+                    </span>
+                </div>
+
+                <h2 class="text-xl font-semibold mb-1">${c.event}</h2>
+                <p class="text-blue-400 text-sm mb-2">${timeRemaining(c.start)}</p>
+                <p class="text-slate-400 text-sm">
+                    Starts at: ${new Date(c.start).toLocaleString()}
+                </p>
+            </div>
+
+            <a href="${c.href}" target="_blank"
+               style="background:${BUTTON_COLOR};color:black"
+               class="block mt-4 text-center font-bold py-2 px-4 rounded transition hover:scale-105 shadow-lg">
+                Register / View
+            </a>
+        `;
+        container.appendChild(card);
+    });
+}
+
+fetchContests();
+setInterval(fetchContests, 30 * 60 * 1000);
 </script>
 </body>
 </html>
+
 
 
