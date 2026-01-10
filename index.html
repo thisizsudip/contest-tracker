@@ -24,166 +24,181 @@
 </head>
 
 <body class="p-4 md:p-8">
-    <div class="max-w-5xl mx-auto">
+<div class="max-w-5xl mx-auto">
 
-        <!-- Header -->
-        <header class="mb-10 text-center">
-            <h1 class="text-4xl font-bold text-blue-400 mb-2">
-                Upcoming Coding Contests
-            </h1>
-            <p class="text-slate-400">
-                Next 7 days · Famous platforms only
-            </p>
-            <div id="status" class="mt-4 text-sm text-slate-500 italic">
-                Fetching contests...
-            </div>
-        </header>
+    <!-- Header -->
+    <header class="mb-10 text-center">
+        <h1 class="text-4xl font-bold text-blue-400 mb-2">
+            Upcoming Coding Contests
+        </h1>
+        <p class="text-slate-400">
+            Next 7 days · Famous platforms only
+        </p>
+        <div id="status" class="mt-4 text-sm text-slate-500 italic">
+            Fetching contests...
+        </div>
+    </header>
 
-        <!-- Contest List -->
-        <div id="contest-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+    <!-- Contest List -->
+    <div id="contest-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
 
-    </div>
+</div>
 
-    <script>
-        const USERNAME = 'WhatADrag';
-        const API_KEY = 'c337ee2f074d30a050ba4bfab4e8664c6af388b0';
+<script>
+    const USERNAME = 'WhatADrag';
+    const API_KEY = 'c337ee2f074d30a050ba4bfab4e8664c6af388b0';
 
-        const API_URL =
-            `https://clist.by/api/v4/contest/?username=${USERNAME}&api_key=${API_KEY}&upcoming=true&order_by=start`;
+    const API_URL =
+        `https://clist.by/api/v4/contest/?username=${USERNAME}&api_key=${API_KEY}&upcoming=true&order_by=start`;
 
-        // Famous platforms we want
-        const ALLOWED_PLATFORMS = [
-            'codeforces',
-            'codechef',
-            'atcoder',
-            'leetcode',
-            'hackerrank',
-            'hackerearth',
-            'topcoder',
-            'google',
-            'meta',
-            'facebook'
-        ];
+    const ALLOWED_PLATFORMS = [
+        'codeforces',
+        'codechef',
+        'atcoder',
+        'leetcode',
+        'hackerrank',
+        'hackerearth',
+        'topcoder',
+        'google',
+        'meta',
+        'facebook'
+    ];
 
-        async function fetchContests() {
-            try {
-                const response = await fetch(API_URL);
-                const data = await response.json();
+    /* ================= DAILY COLOR LIST ================= */
+    const DAILY_COLORS = [
+        "#000000","#040720","#34282C","#3B3131","#5C5858","#696969",
+        "#808080","#A9A9A9","#D3D3D3","#FFD700","#FF8C00","#FF4500",
+        "#DC143C","#FF69B4","#8A2BE2","#6A5ACD","#4169E1","#1E90FF",
+        "#00BFFF","#00CED1","#20B2AA","#3CB371","#32CD32","#7FFF00",
+        "#ADFF2F","#FFFF00","#F4A460","#CD853F","#A0522D","#8B4513"
+        // 🔥 You can add ALL your hex colors here safely
+    ];
 
-                const now = new Date();
-                const sevenDaysLater = new Date();
-                sevenDaysLater.setDate(now.getDate() + 7);
+    function getDailyColor() {
+        const today = new Date().toISOString().slice(0, 10);
+        const saved = localStorage.getItem("dailyColor");
 
-                const filtered = data.objects.filter(contest => {
-                    const start = new Date(contest.start);
-                    const resource = contest.resource.toLowerCase();
+        if (saved) {
+            const { date, color } = JSON.parse(saved);
+            if (date === today) return color;
+        }
 
-                    const isAllowedPlatform = ALLOWED_PLATFORMS.some(p =>
-                        resource.includes(p)
-                    );
+        const color =
+            DAILY_COLORS[Math.floor(Math.random() * DAILY_COLORS.length)];
 
-                    return (
-                        start >= now &&
-                        start <= sevenDaysLater &&
-                        isAllowedPlatform
-                    );
-                });
+        localStorage.setItem(
+            "dailyColor",
+            JSON.stringify({ date: today, color })
+        );
 
-                filtered.sort(
-                    (a, b) => new Date(a.start) - new Date(b.start)
+        return color;
+    }
+
+    const DAILY_BUTTON_COLOR = getDailyColor();
+
+    async function fetchContests() {
+        try {
+            const response = await fetch(API_URL);
+            const data = await response.json();
+
+            const now = new Date();
+            const sevenDaysLater = new Date();
+            sevenDaysLater.setDate(now.getDate() + 7);
+
+            const filtered = data.objects.filter(contest => {
+                const start = new Date(contest.start);
+                const resource = contest.resource.toLowerCase();
+
+                const isAllowedPlatform = ALLOWED_PLATFORMS.some(p =>
+                    resource.includes(p)
                 );
 
-                displayContests(filtered);
-
-                document.getElementById('status').innerText =
-                    `Showing ${filtered.length} contests · Updated at ${new Date().toLocaleTimeString()}`;
-
-            } catch (error) {
-                console.error(error);
-                document.getElementById('status').innerText =
-                    'Failed to load contests';
-            }
-        }
-
-        function getTimeRemaining(startTime) {
-            const now = new Date();
-            const start = new Date(startTime);
-            const diffMs = start - now;
-
-            if (diffMs <= 0) return 'Starting now';
-
-            const minutes = Math.floor(diffMs / 60000);
-            const hours = Math.floor(minutes / 60);
-            const days = Math.floor(hours / 24);
-
-            if (minutes < 60) {
-                return `Starts in ${minutes} minutes`;
-            }
-            if (hours < 24) {
-                return `Starts in ${hours} hours`;
-            }
-            return `Starts in ${days} days`;
-        }
-
-        function displayContests(contests) {
-            const container = document.getElementById('contest-list');
-            container.innerHTML = '';
-
-            if (contests.length === 0) {
-                container.innerHTML = `
-                    <div class="col-span-full text-center text-slate-400">
-                        No famous-platform contests in the next 7 days 🚀
-                    </div>
-                `;
-                return;
-            }
-
-            contests.forEach(contest => {
-                const startTime = new Date(contest.start).toLocaleString();
-                const durationHours = Math.floor(contest.duration / 3600);
-                const remaining = getTimeRemaining(contest.start);
-
-                const card = document.createElement('div');
-                card.className =
-                    'contest-card bg-slate-800 p-6 rounded-xl shadow-lg flex flex-col justify-between';
-
-                card.innerHTML = `
-                    <div>
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="bg-blue-900 text-blue-200 text-xs font-bold px-2.5 py-0.5 rounded">
-                                ${contest.resource}
-                            </span>
-                            <span class="text-slate-400 text-xs">
-                                ${durationHours} Hours
-                            </span>
-                        </div>
-
-                        <h2 class="text-xl font-semibold mb-1">
-                            ${contest.event}
-                        </h2>
-
-                        <p class="text-blue-400 text-sm font-medium mb-2">
-                            ${remaining}
-                        </p>
-
-                        <p class="text-slate-400 text-sm">
-                            Starts at: ${startTime}
-                        </p>
-                    </div>
-
-                    <a href="${contest.href}" target="_blank"
-                       class="block mt-4 text-center bg-[#FFD700] hover:bg-[#e6c200] text-black font-bold py-2 px-4 rounded transition hover:scale-105 shadow-lg">
-                        Register / View
-                    </a>
-                `;
-
-                container.appendChild(card);
+                return start >= now && start <= sevenDaysLater && isAllowedPlatform;
             });
+
+            filtered.sort((a, b) => new Date(a.start) - new Date(b.start));
+
+            displayContests(filtered);
+
+            document.getElementById('status').innerText =
+                `Showing ${filtered.length} contests · Updated at ${new Date().toLocaleTimeString()}`;
+
+        } catch (error) {
+            console.error(error);
+            document.getElementById('status').innerText =
+                'Failed to load contests';
+        }
+    }
+
+    function getTimeRemaining(startTime) {
+        const diff = new Date(startTime) - new Date();
+
+        if (diff <= 0) return 'Starting now';
+
+        const minutes = Math.floor(diff / 60000);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+
+        if (minutes < 60) return `Starts in ${minutes} minutes`;
+        if (hours < 24) return `Starts in ${hours} hours`;
+        return `Starts in ${days} days`;
+    }
+
+    function displayContests(contests) {
+        const container = document.getElementById('contest-list');
+        container.innerHTML = '';
+
+        if (!contests.length) {
+            container.innerHTML = `
+                <div class="col-span-full text-center text-slate-400">
+                    No famous-platform contests in the next 7 days 🚀
+                </div>
+            `;
+            return;
         }
 
-        fetchContests();
-        setInterval(fetchContests, 30 * 60 * 1000);
-    </script>
+        contests.forEach(contest => {
+            const card = document.createElement('div');
+            card.className =
+                'contest-card bg-slate-800 p-6 rounded-xl shadow-lg flex flex-col justify-between';
+
+            card.innerHTML = `
+                <div>
+                    <div class="flex justify-between mb-4">
+                        <span class="bg-blue-900 text-blue-200 text-xs font-bold px-2.5 py-0.5 rounded">
+                            ${contest.resource}
+                        </span>
+                        <span class="text-slate-400 text-xs">
+                            ${Math.floor(contest.duration / 3600)} Hours
+                        </span>
+                    </div>
+
+                    <h2 class="text-xl font-semibold mb-1">${contest.event}</h2>
+
+                    <p class="text-blue-400 text-sm font-medium mb-2">
+                        ${getTimeRemaining(contest.start)}
+                    </p>
+
+                    <p class="text-slate-400 text-sm">
+                        Starts at: ${new Date(contest.start).toLocaleString()}
+                    </p>
+                </div>
+
+                <a href="${contest.href}" target="_blank"
+                   style="background-color:${DAILY_BUTTON_COLOR}; color:black;"
+                   class="block mt-4 text-center font-bold py-2 px-4 rounded transition hover:scale-105 shadow-lg">
+                    Register / View
+                </a>
+            `;
+
+            container.appendChild(card);
+        });
+    }
+
+    fetchContests();
+    setInterval(fetchContests, 30 * 60 * 1000);
+</script>
 </body>
 </html>
+
 
