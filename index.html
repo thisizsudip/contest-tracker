@@ -1,67 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Coding Contest Tracker</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Coding Contest Tracker</title>
 
-    <!-- Manifest for PWA -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1e293b">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1e293b">
 
-    <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.tailwindcss.com"></script>
 
-    <style>
-        body {
-            background-color: #0f172a;
-            color: white;
-        }
-        .contest-card {
-            transition: transform 0.2s, border-color 0.2s;
-            border: 1px solid #1e293b;
-        }
-        .contest-card:hover {
-            transform: translateY(-5px);
-            border-color: #3b82f6;
-        }
-    </style>
+<style>
+body {
+    background-color: #0f172a;
+    color: white;
+}
+.contest-card {
+    transition: transform 0.2s, border-color 0.2s;
+    border: 1px solid #1e293b;
+}
+.contest-card:hover {
+    transform: translateY(-5px);
+    border-color: #3b82f6;
+}
+</style>
 </head>
 
 <body class="p-4 md:p-8">
 <div class="max-w-5xl mx-auto">
 
-    <header class="mb-10 text-center">
-        <h1 class="text-4xl font-bold text-blue-400 mb-2">
-            Upcoming Coding Contests
-        </h1>
-        <p class="text-slate-400">
-            Next 7 days · Famous platforms only
-        </p>
-        <div id="status" class="mt-4 text-sm text-slate-500 italic">
-            Fetching contests...
-        </div>
-    </header>
+<header class="mb-10 text-center">
+    <h1 class="text-4xl font-bold text-blue-400 mb-2">
+        Upcoming & Ongoing Coding Contests
+    </h1>
+    <p class="text-slate-400">
+        Next 7 days · Local time · Famous platforms
+    </p>
+    <div id="status" class="mt-4 text-sm text-slate-500 italic">
+        Fetching contests...
+    </div>
+</header>
 
-    <div id="contest-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+<div id="contest-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
 
 </div>
 
 <script>
-/* ================= PWA SERVICE WORKER ================= */
+/* ================= SERVICE WORKER ================= */
 if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("sw.js");
 }
 
 /* ================= CONFIG ================= */
-const USERNAME = 'WhatADrag';
-const API_KEY = 'c337ee2f074d30a050ba4bfab4e8664c6af388b0';
+const USERNAME = "WhatADrag";
+const API_KEY = "c337ee2f074d30a050ba4bfab4e8664c6af388b0";
 
 const API_URL =
 `https://clist.by/api/v4/contest/?username=${USERNAME}&api_key=${API_KEY}&upcoming=true&order_by=start`;
 
 const ALLOWED_PLATFORMS = [
-    'codeforces','codechef','atcoder','leetcode',
-    'hackerrank','hackerearth','topcoder','google','meta'
+    "codeforces","codechef","atcoder","leetcode",
+    "hackerrank","hackerearth","topcoder","google","meta"
 ];
 
 /* ================= DAILY COLORS (NO BLACK) ================= */
@@ -74,29 +73,28 @@ const DAILY_COLORS = [
 ];
 
 function getDailyColor() {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = new Date().toISOString().slice(0,10);
     const saved = localStorage.getItem("dailyColor");
 
     if (saved) {
         const { date, color } = JSON.parse(saved);
-        if (date === today && color !== "#000000") return color;
+        if (date === today) return color;
     }
 
-    let color;
-    do {
-        color = DAILY_COLORS[Math.floor(Math.random() * DAILY_COLORS.length)];
-    } while (color === "#000000");
-
+    const color = DAILY_COLORS[Math.floor(Math.random() * DAILY_COLORS.length)];
     localStorage.setItem("dailyColor", JSON.stringify({ date: today, color }));
     return color;
 }
 
 const BUTTON_COLOR = getDailyColor();
 
-/* ================= TIME FORMAT ================= */
-function formatLocalTime(dateStr) {
-    const d = new Date(dateStr);
-    return d.toLocaleString(undefined, {
+/* ================= TIME HELPERS ================= */
+function utcToLocal(dateStr) {
+    return new Date(dateStr + "Z"); // FORCE UTC
+}
+
+function formatLocalTime(date) {
+    return date.toLocaleString(undefined, {
         weekday: "short",
         year: "numeric",
         month: "short",
@@ -108,17 +106,20 @@ function formatLocalTime(dateStr) {
     });
 }
 
-function timeRemaining(start) {
-    const diff = new Date(start) - new Date();
-    if (diff <= 0) return "Starting now";
-    const mins = Math.floor(diff / 60000);
-    if (mins < 60) return `Starts in ${mins} minutes`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `Starts in ${hrs} hours`;
-    return `Starts in ${Math.floor(hrs / 24)} days`;
+function contestStatus(start, end) {
+    const now = new Date();
+    if (now >= start && now <= end) return "ONGOING";
+    if (now < start) {
+        const mins = Math.floor((start - now) / 60000);
+        if (mins < 60) return `Starts in ${mins} min`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return `Starts in ${hrs} hrs`;
+        return `Starts in ${Math.floor(hrs / 24)} days`;
+    }
+    return "Finished";
 }
 
-/* ================= DATA FETCH ================= */
+/* ================= FETCH DATA ================= */
 async function fetchContests() {
     try {
         const res = await fetch(API_URL);
@@ -129,20 +130,25 @@ async function fetchContests() {
         limit.setDate(now.getDate() + 7);
 
         const contests = data.objects.filter(c => {
-            const start = new Date(c.start);
+            const start = utcToLocal(c.start);
+            const end = new Date(start.getTime() + c.duration * 1000);
             const platform = c.resource.toLowerCase();
-            return start >= now &&
+
+            return end > now &&
                    start <= limit &&
                    ALLOWED_PLATFORMS.some(p => platform.includes(p));
         });
 
-        contests.sort((a, b) => new Date(a.start) - new Date(b.start));
-        renderContests(contests);
+        contests.sort((a, b) =>
+            utcToLocal(a.start) - utcToLocal(b.start)
+        );
 
+        renderContests(contests);
         document.getElementById("status").innerText =
-            `Showing ${contests.length} contests · Updated ${new Date().toLocaleTimeString()}`;
+            `Showing ${contests.length} contests · Local time`;
     } catch {
-        document.getElementById("status").innerText = "Failed to load contests";
+        document.getElementById("status").innerText =
+            "Failed to load contests";
     }
 }
 
@@ -154,39 +160,50 @@ function renderContests(contests) {
     if (!contests.length) {
         container.innerHTML =
             `<div class="col-span-full text-center text-slate-400">
-                No contests in the next 7 days 🚀
+                No contests available 🚀
             </div>`;
         return;
     }
 
     contests.forEach(c => {
+        const start = utcToLocal(c.start);
+        const end = new Date(start.getTime() + c.duration * 1000);
+        const status = contestStatus(start, end);
+
+        const badgeColor =
+            status === "ONGOING"
+                ? "bg-green-600 text-white"
+                : "bg-blue-900 text-blue-200";
+
         const card = document.createElement("div");
         card.className =
             "contest-card bg-slate-800 p-6 rounded-xl shadow-lg flex flex-col justify-between";
 
         card.innerHTML = `
-            <div>
-                <div class="flex justify-between mb-4">
-                    <span class="bg-blue-900 text-blue-200 text-xs font-bold px-2.5 py-0.5 rounded">
-                        ${c.resource}
-                    </span>
-                    <span class="text-slate-400 text-xs">
-                        ${Math.floor(c.duration / 3600)} hrs
-                    </span>
-                </div>
-
-                <h2 class="text-xl font-semibold mb-1">${c.event}</h2>
-                <p class="text-blue-400 text-sm mb-2">${timeRemaining(c.start)}</p>
-                <p class="text-slate-400 text-sm">
-                    Starts at: ${formatLocalTime(c.start)}
-                </p>
+        <div>
+            <div class="flex justify-between mb-4">
+                <span class="${badgeColor} text-xs font-bold px-2.5 py-0.5 rounded">
+                    ${status}
+                </span>
+                <span class="text-slate-400 text-xs">
+                    ${Math.floor(c.duration / 3600)} hrs
+                </span>
             </div>
 
-            <a href="${c.href}" target="_blank"
-               class="block mt-4 text-center font-bold py-2 px-4 rounded transition hover:scale-105 shadow-lg text-slate-900"
-               style="background:${BUTTON_COLOR}">
-                Register / View
-            </a>
+            <h2 class="text-xl font-semibold mb-1">${c.event}</h2>
+            <p class="text-slate-400 text-sm">
+                Starts: ${formatLocalTime(start)}
+            </p>
+            <p class="text-slate-400 text-sm">
+                Ends: ${formatLocalTime(end)}
+            </p>
+        </div>
+
+        <a href="${c.href}" target="_blank"
+           class="block mt-4 text-center font-bold py-2 px-4 rounded transition hover:scale-105 shadow-lg text-slate-900"
+           style="background:${BUTTON_COLOR}">
+            Register / View
+        </a>
         `;
         container.appendChild(card);
     });
@@ -197,4 +214,3 @@ setInterval(fetchContests, 30 * 60 * 1000);
 </script>
 </body>
 </html>
-
