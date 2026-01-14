@@ -64,9 +64,9 @@ const ALLOWED_PLATFORMS = [
     'hackerrank','hackerearth','topcoder','google','meta'
 ];
 
-/* ================= DAILY COLORS ================= */
+/* ================= DAILY COLORS (NO BLACK) ================= */
 const DAILY_COLORS = [
-    "#000000","#3B3131","#696969","#808080","#A9A9A9",
+    "#3B3131","#696969","#808080","#A9A9A9",
     "#FFD700","#FF8C00","#FF4500","#DC143C",
     "#8A2BE2","#6A5ACD","#4169E1","#1E90FF",
     "#00CED1","#20B2AA","#32CD32","#7FFF00",
@@ -79,15 +79,44 @@ function getDailyColor() {
 
     if (saved) {
         const { date, color } = JSON.parse(saved);
-        if (date === today) return color;
+        if (date === today && color !== "#000000") return color;
     }
 
-    const color = DAILY_COLORS[Math.floor(Math.random() * DAILY_COLORS.length)];
+    let color;
+    do {
+        color = DAILY_COLORS[Math.floor(Math.random() * DAILY_COLORS.length)];
+    } while (color === "#000000");
+
     localStorage.setItem("dailyColor", JSON.stringify({ date: today, color }));
     return color;
 }
 
 const BUTTON_COLOR = getDailyColor();
+
+/* ================= TIME FORMAT ================= */
+function formatLocalTime(dateStr) {
+    const d = new Date(dateStr);
+    return d.toLocaleString(undefined, {
+        weekday: "short",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+        timeZoneName: "short"
+    });
+}
+
+function timeRemaining(start) {
+    const diff = new Date(start) - new Date();
+    if (diff <= 0) return "Starting now";
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `Starts in ${mins} minutes`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `Starts in ${hrs} hours`;
+    return `Starts in ${Math.floor(hrs / 24)} days`;
+}
 
 /* ================= DATA FETCH ================= */
 async function fetchContests() {
@@ -117,16 +146,7 @@ async function fetchContests() {
     }
 }
 
-function timeRemaining(start) {
-    const diff = new Date(start) - new Date();
-    if (diff <= 0) return "Starting now";
-    const mins = Math.floor(diff / 60000);
-    if (mins < 60) return `Starts in ${mins} minutes`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `Starts in ${hrs} hours`;
-    return `Starts in ${Math.floor(hrs / 24)} days`;
-}
-
+/* ================= RENDER ================= */
 function renderContests(contests) {
     const container = document.getElementById("contest-list");
     container.innerHTML = "";
@@ -158,13 +178,13 @@ function renderContests(contests) {
                 <h2 class="text-xl font-semibold mb-1">${c.event}</h2>
                 <p class="text-blue-400 text-sm mb-2">${timeRemaining(c.start)}</p>
                 <p class="text-slate-400 text-sm">
-                    Starts at: ${new Date(c.start).toLocaleString()}
+                    Starts at: ${formatLocalTime(c.start)}
                 </p>
             </div>
 
             <a href="${c.href}" target="_blank"
-               style="background:${BUTTON_COLOR};color:black"
-               class="block mt-4 text-center font-bold py-2 px-4 rounded transition hover:scale-105 shadow-lg">
+               class="block mt-4 text-center font-bold py-2 px-4 rounded transition hover:scale-105 shadow-lg text-slate-900"
+               style="background:${BUTTON_COLOR}">
                 Register / View
             </a>
         `;
@@ -177,3 +197,4 @@ setInterval(fetchContests, 30 * 60 * 1000);
 </script>
 </body>
 </html>
+
