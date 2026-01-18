@@ -34,7 +34,7 @@ body {
         Upcoming & Ongoing Coding Contests
     </h1>
     <p class="text-slate-400">
-        Local Time: Bangladesh (GMT +6)
+        Timezone: Bangladesh (GMT +6)
     </p>
     <div id="status" class="mt-4 text-sm text-slate-500 italic">
         Fetching contests...
@@ -90,7 +90,7 @@ const BUTTON_COLOR = getDailyColor();
 const BD_TZ = "Asia/Dhaka";
 
 function parseUTC(dateStr) {
-    return new Date(dateStr); // ✅ DO NOT add "Z"
+    return new Date(dateStr); // Clist already UTC
 }
 
 function formatBD(date) {
@@ -120,15 +120,13 @@ function contestStatus(start, end) {
     return "Finished";
 }
 
-/* ================= FETCH DATA ================= */
+/* ================= FETCH ================= */
 async function fetchContests() {
     try {
         const res = await fetch(API_URL);
         const data = await res.json();
 
         const now = new Date();
-        const limit = new Date();
-        limit.setDate(now.getDate() + 7);
 
         const contests = data.objects.filter(c => {
             const start = parseUTC(c.start);
@@ -136,8 +134,7 @@ async function fetchContests() {
             const platform = c.resource.toLowerCase();
 
             return (
-                end > now &&                      // ✅ keep until finished
-                start <= limit &&                 // next 7 days
+                end > now &&   // ✅ ONLY rule that matters
                 ALLOWED_PLATFORMS.some(p => platform.includes(p))
             );
         });
@@ -217,4 +214,3 @@ setInterval(fetchContests, 30 * 60 * 1000);
 </script>
 </body>
 </html>
-
