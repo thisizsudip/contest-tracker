@@ -1,70 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Coding Contest Tracker</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Coding Contest Tracker</title>
 
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1e293b">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1e293b">
 
-    <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.tailwindcss.com"></script>
 
-    <style>
-        body {
-            background-color: #0f172a;
-            color: white;
-            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        }
-        .contest-card {
-            transition: transform 0.2s, border-color 0.2s;
-            border: 1px solid #1e293b;
-        }
-        .contest-card:hover {
-            transform: translateY(-5px);
-            border-color: #3b82f6;
-        }
-        .pulse-live {
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: .6; }
-        }
-    </style>
+<style>
+body {
+    background-color: #0f172a;
+    color: white;
+}
+.contest-card {
+    transition: transform 0.2s, border-color 0.2s;
+    border: 1px solid #1e293b;
+}
+.contest-card:hover {
+    transform: translateY(-5px);
+    border-color: #3b82f6;
+}
+</style>
 </head>
 
 <body class="p-4 md:p-8">
 <div class="max-w-5xl mx-auto">
 
-    <header class="mb-10 text-center">
-        <h1 class="text-4xl font-bold text-blue-400 mb-2">
-            Contest Tracker
-        </h1>
-        <p class="text-slate-400">
-            GMT +6:00 (Bangladesh Standard Time)
-        </p>
-        <div id="status" class="mt-4 text-sm text-slate-500 font-mono">
-            Checking for contests...
-        </div>
-    </header>
+<header class="mb-10 text-center">
+    <h1 class="text-4xl font-bold text-blue-400 mb-2">
+        Upcoming & Ongoing Coding Contests
+    </h1>
+    <p class="text-slate-400">
+        Local Time: Bangladesh (GMT +6)
+    </p>
+    <div id="status" class="mt-4 text-sm text-slate-500 italic">
+        Fetching contests...
+    </div>
+</header>
 
-    <div id="contest-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+<div id="contest-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
 
 </div>
 
 <script>
 /* ================= SERVICE WORKER ================= */
 if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js").catch(() => {});
+    navigator.serviceWorker.register("sw.js");
 }
 
 /* ================= CONFIG ================= */
 const USERNAME = "WhatADrag";
 const API_KEY = "c337ee2f074d30a050ba4bfab4e8664c6af388b0";
 
-// Fetching both ongoing and upcoming by removing "upcoming=true"
-const API_URL = `https://clist.by/api/v4/contest/?username=${USERNAME}&api_key=${API_KEY}&order_by=start&limit=100`;
+const API_URL =
+`https://clist.by/api/v4/contest/?username=${USERNAME}&api_key=${API_KEY}&order_by=start`;
 
 const ALLOWED_PLATFORMS = [
     "codeforces","codechef","atcoder","leetcode",
@@ -73,97 +65,93 @@ const ALLOWED_PLATFORMS = [
 
 /* ================= DAILY COLORS ================= */
 const DAILY_COLORS = [
-    "#FFD700","#FF8C00","#FF4500","#DC143C","#8A2BE2","#4169E1","#1E90FF",
-    "#00CED1","#20B2AA","#32CD32","#7FFF00","#F4A460"
+    "#3B3131","#696969","#808080","#A9A9A9",
+    "#FFD700","#FF8C00","#FF4500","#DC143C",
+    "#8A2BE2","#6A5ACD","#4169E1","#1E90FF",
+    "#00CED1","#20B2AA","#32CD32","#7FFF00",
+    "#FFFF00","#F4A460","#8B4513"
 ];
 
-function getDailyButtonColor() {
-    const today = new Date().toDateString();
-    const saved = localStorage.getItem("dailyColorData");
+function getDailyColor() {
+    const today = new Date().toISOString().slice(0,10);
+    const saved = localStorage.getItem("dailyColor");
     if (saved) {
         const { date, color } = JSON.parse(saved);
         if (date === today) return color;
     }
     const color = DAILY_COLORS[Math.floor(Math.random() * DAILY_COLORS.length)];
-    localStorage.setItem("dailyColorData", JSON.stringify({ date: today, color }));
+    localStorage.setItem("dailyColor", JSON.stringify({ date: today, color }));
     return color;
 }
 
-const BUTTON_COLOR = getDailyButtonColor();
+const BUTTON_COLOR = getDailyColor();
 
-/* ================= TIME HELPERS (GMT+6) ================= */
-const BD_TIMEZONE = "Asia/Dhaka";
+/* ================= TIME HELPERS ================= */
+const BD_TZ = "Asia/Dhaka";
 
-function parseToLocal(dateStr) {
-    // API provides "2023-10-25T12:00:00". 
-    // Adding 'Z' ensures the browser treats it as UTC before converting to BD time.
-    return new Date(dateStr + "Z");
+function parseUTC(dateStr) {
+    return new Date(dateStr); // ✅ DO NOT add "Z"
 }
 
-function formatBDTime(date) {
+function formatBD(date) {
     return date.toLocaleString("en-GB", {
-        timeZone: BD_TIMEZONE,
+        timeZone: BD_TZ,
         weekday: "short",
-        day: "numeric",
+        year: "numeric",
         month: "short",
+        day: "numeric",
         hour: "2-digit",
         minute: "2-digit",
-        hour12: true
+        hour12: true,
+        timeZoneName: "short"
     });
 }
 
-function getStatusDetails(start, end) {
+function contestStatus(start, end) {
     const now = new Date();
-    
-    // Check if currently running
-    if (now >= start && now < end) {
-        return { label: "LIVE NOW", isLive: true };
+    if (now >= start && now <= end) return "ONGOING";
+    if (now < start) {
+        const mins = Math.floor((start - now) / 60000);
+        if (mins < 60) return `Starts in ${mins} min`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return `Starts in ${hrs} hrs`;
+        return `Starts in ${Math.floor(hrs / 24)} days`;
     }
-    
-    // Calculate time until start
-    const diffMs = start - now;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHrs = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHrs / 24);
-
-    if (diffMins < 60) return { label: `Starts in ${diffMins}m`, isLive: false };
-    if (diffHrs < 24) return { label: `Starts in ${diffHrs}h`, isLive: false };
-    return { label: `Starts in ${diffDays}d`, isLive: false };
+    return "Finished";
 }
 
 /* ================= FETCH DATA ================= */
 async function fetchContests() {
     try {
         const res = await fetch(API_URL);
-        if (!res.ok) throw new Error("API Limit reached");
-        
         const data = await res.json();
-        const now = new Date();
-        const sevenDaysLater = new Date();
-        sevenDaysLater.setDate(now.getDate() + 7);
 
-        const filtered = data.objects.filter(c => {
-            const start = parseToLocal(c.start);
-            const end = parseToLocal(c.end);
+        const now = new Date();
+        const limit = new Date();
+        limit.setDate(now.getDate() + 7);
+
+        const contests = data.objects.filter(c => {
+            const start = parseUTC(c.start);
+            const end = new Date(start.getTime() + c.duration * 1000);
             const platform = c.resource.toLowerCase();
 
-            // 1. Keep if it hasn't finished yet (end is in the future)
-            // 2. Only show if it starts within the next 7 days
-            // 3. Match against platform list
-            return end > now && 
-                   start <= sevenDaysLater && 
-                   ALLOWED_PLATFORMS.some(p => platform.includes(p));
+            return (
+                end > now &&                      // ✅ keep until finished
+                start <= limit &&                 // next 7 days
+                ALLOWED_PLATFORMS.some(p => platform.includes(p))
+            );
         });
 
-        // Sort: Ongoing first, then by start date
-        filtered.sort((a, b) => parseToLocal(a.start) - parseToLocal(b.start));
+        contests.sort((a, b) =>
+            parseUTC(a.start) - parseUTC(b.start)
+        );
 
-        renderContests(filtered);
-        document.getElementById("status").innerText = 
-            `Last updated: ${new Date().toLocaleTimeString('en-GB', {timeZone: BD_TIMEZONE})}`;
-    } catch (err) {
-        document.getElementById("status").innerText = "Error fetching data. Check connection.";
-        console.error(err);
+        renderContests(contests);
+        document.getElementById("status").innerText =
+            `Showing ${contests.length} contests · Bangladesh Time`;
+    } catch (e) {
+        document.getElementById("status").innerText =
+            "Failed to load contests";
     }
 }
 
@@ -173,60 +161,59 @@ function renderContests(contests) {
     container.innerHTML = "";
 
     if (!contests.length) {
-        container.innerHTML = `<div class="col-span-full text-center py-10 text-slate-500 italic">No contests found for the next 7 days.</div>`;
+        container.innerHTML = `
+        <div class="col-span-full text-center text-slate-400">
+            No contests available 🚀
+        </div>`;
         return;
     }
 
     contests.forEach(c => {
-        const start = parseToLocal(c.start);
-        const end = parseToLocal(c.end);
-        const status = getStatusDetails(start, end);
+        const start = parseUTC(c.start);
+        const end = new Date(start.getTime() + c.duration * 1000);
+        const status = contestStatus(start, end);
 
-        const badgeStyle = status.isLive 
-            ? "bg-red-600 text-white pulse-live" 
-            : "bg-blue-900 text-blue-200";
+        const badgeColor =
+            status === "ONGOING"
+                ? "bg-green-600 text-white"
+                : "bg-blue-900 text-blue-200";
 
         const card = document.createElement("div");
-        card.className = "contest-card bg-slate-800 p-6 rounded-xl shadow-lg flex flex-col justify-between";
+        card.className =
+            "contest-card bg-slate-800 p-6 rounded-xl shadow-lg flex flex-col justify-between";
 
         card.innerHTML = `
-            <div>
-                <div class="flex justify-between items-start mb-4">
-                    <span class="${badgeStyle} text-[10px] font-bold px-2 py-1 rounded tracking-wider">
-                        ${status.label}
-                    </span>
-                    <span class="text-slate-500 text-xs font-mono">
-                        ${Math.round(c.duration / 3600)}h Duration
-                    </span>
-                </div>
-
-                <h2 class="text-xl font-bold mb-4 text-slate-100 leading-tight">${c.event}</h2>
-                
-                <div class="space-y-2 mb-6">
-                    <div class="flex flex-col">
-                        <span class="text-[10px] text-slate-500 font-bold uppercase">Starts</span>
-                        <span class="text-sm text-slate-300">${formatBDTime(start)}</span>
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="text-[10px] text-slate-500 font-bold uppercase">Ends</span>
-                        <span class="text-sm text-slate-300">${formatBDTime(end)}</span>
-                    </div>
-                </div>
+        <div>
+            <div class="flex justify-between mb-4">
+                <span class="${badgeColor} text-xs font-bold px-2.5 py-0.5 rounded">
+                    ${status}
+                </span>
+                <span class="text-slate-400 text-xs">
+                    ${Math.floor(c.duration / 3600)} hrs
+                </span>
             </div>
 
-            <a href="${c.href}" target="_blank"
-               class="block text-center font-bold py-3 px-4 rounded-lg transition-all hover:brightness-110 active:scale-95 shadow-md text-slate-900"
-               style="background:${BUTTON_COLOR}">
-                Register / Details
-            </a>
+            <h2 class="text-xl font-semibold mb-1">${c.event}</h2>
+            <p class="text-slate-400 text-sm">
+                Starts: ${formatBD(start)}
+            </p>
+            <p class="text-slate-400 text-sm">
+                Ends: ${formatBD(end)}
+            </p>
+        </div>
+
+        <a href="${c.href}" target="_blank"
+           class="block mt-4 text-center font-bold py-2 px-4 rounded transition hover:scale-105 shadow-lg text-slate-900"
+           style="background:${BUTTON_COLOR}">
+            Register / View
+        </a>
         `;
         container.appendChild(card);
     });
 }
 
 fetchContests();
-// Refresh every 10 mins to update "Starts in..." labels
-setInterval(fetchContests, 10 * 60 * 1000);
+setInterval(fetchContests, 30 * 60 * 1000);
 </script>
 </body>
 </html>
