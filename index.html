@@ -34,7 +34,7 @@ body {
         Upcoming & Ongoing Coding Contests
     </h1>
     <p class="text-slate-400">
-        Timezone: Bangladesh (GMT +6)
+        Next 7 days · Local time · Famous platforms
     </p>
     <div id="status" class="mt-4 text-sm text-slate-500 italic">
         Fetching contests...
@@ -56,14 +56,14 @@ const USERNAME = "WhatADrag";
 const API_KEY = "c337ee2f074d30a050ba4bfab4e8664c6af388b0";
 
 const API_URL =
-`https://clist.by/api/v4/contest/?username=${USERNAME}&api_key=${API_KEY}&order_by=start`;
+`https://clist.by/api/v4/contest/?username=${USERNAME}&api_key=${API_KEY}&upcoming=true&order_by=start`;
 
 const ALLOWED_PLATFORMS = [
     "codeforces","codechef","atcoder","leetcode",
     "hackerrank","hackerearth","topcoder","google","meta"
 ];
 
-/* ================= DAILY COLORS ================= */
+/* ================= DAILY COLORS (NO BLACK) ================= */
 const DAILY_COLORS = [
     "#3B3131","#696969","#808080","#A9A9A9",
     "#FFD700","#FF8C00","#FF4500","#DC143C",
@@ -75,10 +75,12 @@ const DAILY_COLORS = [
 function getDailyColor() {
     const today = new Date().toISOString().slice(0,10);
     const saved = localStorage.getItem("dailyColor");
+
     if (saved) {
         const { date, color } = JSON.parse(saved);
         if (date === today) return color;
     }
+
     const color = DAILY_COLORS[Math.floor(Math.random() * DAILY_COLORS.length)];
     localStorage.setItem("dailyColor", JSON.stringify({ date: today, color }));
     return color;
@@ -87,15 +89,12 @@ function getDailyColor() {
 const BUTTON_COLOR = getDailyColor();
 
 /* ================= TIME HELPERS ================= */
-const BD_TZ = "Asia/Dhaka";
-
-function parseUTC(dateStr) {
-    return new Date(dateStr); // Clist already UTC
+function utcToLocal(dateStr) {
+    return new Date(dateStr + "Z"); // FORCE UTC
 }
 
-function formatBD(date) {
-    return date.toLocaleString("en-GB", {
-        timeZone: BD_TZ,
+function formatLocalTime(date) {
+    return date.toLocaleString(undefined, {
         weekday: "short",
         year: "numeric",
         month: "short",
@@ -120,33 +119,34 @@ function contestStatus(start, end) {
     return "Finished";
 }
 
-/* ================= FETCH ================= */
+/* ================= FETCH DATA ================= */
 async function fetchContests() {
     try {
         const res = await fetch(API_URL);
         const data = await res.json();
 
         const now = new Date();
+        const limit = new Date();
+        limit.setDate(now.getDate() + 7);
 
         const contests = data.objects.filter(c => {
-            const start = parseUTC(c.start);
+            const start = utcToLocal(c.start);
             const end = new Date(start.getTime() + c.duration * 1000);
             const platform = c.resource.toLowerCase();
 
-            return (
-                end > now &&   // ✅ ONLY rule that matters
-                ALLOWED_PLATFORMS.some(p => platform.includes(p))
-            );
+            return end > now &&
+                   start <= limit &&
+                   ALLOWED_PLATFORMS.some(p => platform.includes(p));
         });
 
         contests.sort((a, b) =>
-            parseUTC(a.start) - parseUTC(b.start)
+            utcToLocal(a.start) - utcToLocal(b.start)
         );
 
         renderContests(contests);
         document.getElementById("status").innerText =
-            `Showing ${contests.length} contests · Bangladesh Time`;
-    } catch (e) {
+            `Showing ${contests.length} contests · Local time`;
+    } catch {
         document.getElementById("status").innerText =
             "Failed to load contests";
     }
@@ -158,15 +158,15 @@ function renderContests(contests) {
     container.innerHTML = "";
 
     if (!contests.length) {
-        container.innerHTML = `
-        <div class="col-span-full text-center text-slate-400">
-            No contests available 🚀
-        </div>`;
+        container.innerHTML =
+            `<div class="col-span-full text-center text-slate-400">
+                No contests available 🚀
+            </div>`;
         return;
     }
 
     contests.forEach(c => {
-        const start = parseUTC(c.start);
+        const start = utcToLocal(c.start);
         const end = new Date(start.getTime() + c.duration * 1000);
         const status = contestStatus(start, end);
 
@@ -192,10 +192,10 @@ function renderContests(contests) {
 
             <h2 class="text-xl font-semibold mb-1">${c.event}</h2>
             <p class="text-slate-400 text-sm">
-                Starts: ${formatBD(start)}
+                Starts: ${formatLocalTime(start)}
             </p>
             <p class="text-slate-400 text-sm">
-                Ends: ${formatBD(end)}
+                Ends: ${formatLocalTime(end)}
             </p>
         </div>
 
