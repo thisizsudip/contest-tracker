@@ -34,7 +34,7 @@ body {
         Upcoming & Ongoing Coding Contests
     </h1>
     <p class="text-slate-400">
-        Next 7 days · Local time · Famous platforms
+        Next 7 days · GMT +6 (Bangladesh)
     </p>
     <div id="status" class="mt-4 text-sm text-slate-500 italic">
         Fetching contests...
@@ -55,15 +55,16 @@ if ("serviceWorker" in navigator) {
 const USERNAME = "WhatADrag";
 const API_KEY = "c337ee2f074d30a050ba4bfab4e8664c6af388b0";
 
+/* ❌ removed upcoming=true */
 const API_URL =
-`https://clist.by/api/v4/contest/?username=${USERNAME}&api_key=${API_KEY}&upcoming=true&order_by=start`;
+`https://clist.by/api/v4/contest/?username=${USERNAME}&api_key=${API_KEY}&order_by=start`;
 
 const ALLOWED_PLATFORMS = [
     "codeforces","codechef","atcoder","leetcode",
     "hackerrank","hackerearth","topcoder","google","meta"
 ];
 
-/* ================= DAILY COLORS (NO BLACK) ================= */
+/* ================= DAILY COLORS ================= */
 const DAILY_COLORS = [
     "#3B3131","#696969","#808080","#A9A9A9",
     "#FFD700","#FF8C00","#FF4500","#DC143C",
@@ -88,13 +89,16 @@ function getDailyColor() {
 
 const BUTTON_COLOR = getDailyColor();
 
-/* ================= TIME HELPERS ================= */
-function utcToLocal(dateStr) {
-    return new Date(dateStr + "Z"); // FORCE UTC
+/* ================= TIME HELPERS (GMT+6) ================= */
+const BD_TIMEZONE = "Asia/Dhaka";
+
+function utcToDate(dateStr) {
+    return new Date(dateStr + "Z");
 }
 
-function formatLocalTime(date) {
-    return date.toLocaleString(undefined, {
+function formatBDTime(date) {
+    return date.toLocaleString("en-GB", {
+        timeZone: BD_TIMEZONE,
         weekday: "short",
         year: "numeric",
         month: "short",
@@ -130,7 +134,7 @@ async function fetchContests() {
         limit.setDate(now.getDate() + 7);
 
         const contests = data.objects.filter(c => {
-            const start = utcToLocal(c.start);
+            const start = utcToDate(c.start);
             const end = new Date(start.getTime() + c.duration * 1000);
             const platform = c.resource.toLowerCase();
 
@@ -140,12 +144,12 @@ async function fetchContests() {
         });
 
         contests.sort((a, b) =>
-            utcToLocal(a.start) - utcToLocal(b.start)
+            utcToDate(a.start) - utcToDate(b.start)
         );
 
         renderContests(contests);
         document.getElementById("status").innerText =
-            `Showing ${contests.length} contests · Local time`;
+            `Showing ${contests.length} contests · GMT +6`;
     } catch {
         document.getElementById("status").innerText =
             "Failed to load contests";
@@ -158,15 +162,15 @@ function renderContests(contests) {
     container.innerHTML = "";
 
     if (!contests.length) {
-        container.innerHTML =
-            `<div class="col-span-full text-center text-slate-400">
+        container.innerHTML = `
+            <div class="col-span-full text-center text-slate-400">
                 No contests available 🚀
             </div>`;
         return;
     }
 
     contests.forEach(c => {
-        const start = utcToLocal(c.start);
+        const start = utcToDate(c.start);
         const end = new Date(start.getTime() + c.duration * 1000);
         const status = contestStatus(start, end);
 
@@ -192,10 +196,10 @@ function renderContests(contests) {
 
             <h2 class="text-xl font-semibold mb-1">${c.event}</h2>
             <p class="text-slate-400 text-sm">
-                Starts: ${formatLocalTime(start)}
+                Starts: ${formatBDTime(start)}
             </p>
             <p class="text-slate-400 text-sm">
-                Ends: ${formatLocalTime(end)}
+                Ends: ${formatBDTime(end)}
             </p>
         </div>
 
