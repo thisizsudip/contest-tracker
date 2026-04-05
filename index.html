@@ -6,211 +6,786 @@
 <title>Coding Contest Tracker</title>
 
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1e293b">
+<meta name="theme-color" content="#0f172a">
+
+<!-- Google Fonts: JetBrains Mono + Syne -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 
 <script src="https://cdn.tailwindcss.com"></script>
 
 <style>
-body {
-    background-color: #0f172a;
-    color: white;
-}
-.contest-card {
-    transition: transform 0.2s, border-color 0.2s;
-    border: 1px solid #1e293b;
-}
-.contest-card:hover {
-    transform: translateY(-5px);
-    border-color: #3b82f6;
-}
+  :root {
+    --accent: #38bdf8;
+    --accent2: #818cf8;
+    --bg: #0a0f1e;
+    --card: #0f1729;
+    --border: #1e293b;
+    --text: #e2e8f0;
+    --muted: #64748b;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(56,189,248,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(56,189,248,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glowing orbs */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    right: -200px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(56,189,248,0.07) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .orb2 {
+    position: fixed;
+    bottom: -200px;
+    left: -200px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(129,140,248,0.07) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .content-wrap {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .site-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -1px;
+  }
+
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* Cards */
+  .contest-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    animation: fadeUp 0.4s ease both;
+  }
+  .contest-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--accent);
+    box-shadow: 0 0 30px rgba(56,189,248,0.1);
+  }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(20px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  /* Badges */
+  .badge-ongoing {
+    background: linear-gradient(90deg,#16a34a,#15803d);
+    color: #fff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.05em;
+    animation: pulse-green 2s infinite;
+  }
+  @keyframes pulse-green {
+    0%,100% { box-shadow: 0 0 0 0 rgba(22,163,74,0.4); }
+    50%      { box-shadow: 0 0 0 6px rgba(22,163,74,0); }
+  }
+
+  .badge-upcoming {
+    background: rgba(56,189,248,0.1);
+    color: var(--accent);
+    border: 1px solid rgba(56,189,248,0.25);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.05em;
+  }
+
+  /* Register button */
+  .reg-btn {
+    display: block;
+    margin-top: 1rem;
+    text-align: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    padding: 10px 16px;
+    border-radius: 10px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    color: #0a0f1e;
+    text-decoration: none;
+  }
+  .reg-btn:hover {
+    transform: scale(1.03);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+
+  /* Notify button */
+  .notify-btn {
+    margin-top: 8px;
+    width: 100%;
+    padding: 9px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .notify-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(56,189,248,0.05);
+  }
+  .notify-btn.active {
+    border-color: #f59e0b;
+    color: #f59e0b;
+    background: rgba(245,158,11,0.08);
+  }
+  .notify-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* Notification banner */
+  #notif-banner {
+    display: none;
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    background: #0f1729;
+    border: 1px solid var(--accent);
+    border-radius: 14px;
+    padding: 14px 22px;
+    box-shadow: 0 0 40px rgba(56,189,248,0.2);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--accent);
+    white-space: nowrap;
+    animation: slideUp 0.3s ease;
+    max-width: 90vw;
+    text-align: center;
+  }
+  @keyframes slideUp {
+    from { opacity:0; transform: translateX(-50%) translateY(20px); }
+    to   { opacity:1; transform: translateX(-50%) translateY(0); }
+  }
+
+  /* Notification permission pill */
+  #notif-permission-bar {
+    display: none;
+    margin-top: 12px;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.3);
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-size: 0.85rem;
+    color: #fbbf24;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  #notif-permission-bar button {
+    background: #f59e0b;
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 5px 14px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  #notif-permission-bar button:hover { opacity: 0.85; }
+
+  /* Lead time selector */
+  #lead-select {
+    background: rgba(56,189,248,0.07);
+    border: 1px solid rgba(56,189,248,0.2);
+    color: var(--accent);
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    cursor: pointer;
+    outline: none;
+  }
+  #lead-select option { background: #0f1729; color: #e2e8f0; }
+
+  /* Countdown chips */
+  .countdown-chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+
+  /* Divider */
+  .cf-section-label {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+    color: #f59e0b;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+  }
+  .cf-section-label::after {
+    content:'';
+    flex:1;
+    height:1px;
+    background: rgba(245,158,11,0.2);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+
+  /* Staggered card animation */
+  .contest-card:nth-child(1)  { animation-delay: 0.05s }
+  .contest-card:nth-child(2)  { animation-delay: 0.10s }
+  .contest-card:nth-child(3)  { animation-delay: 0.15s }
+  .contest-card:nth-child(4)  { animation-delay: 0.20s }
+  .contest-card:nth-child(5)  { animation-delay: 0.25s }
+  .contest-card:nth-child(6)  { animation-delay: 0.30s }
+  .contest-card:nth-child(7)  { animation-delay: 0.35s }
+  .contest-card:nth-child(8)  { animation-delay: 0.40s }
 </style>
 </head>
 
-<body class="p-4 md:p-8">
-<div class="max-w-5xl mx-auto">
+<body>
+<div class="orb2"></div>
 
-<header class="mb-10 text-center">
-    <h1 class="text-4xl font-bold text-blue-400 mb-2">
-        Upcoming & Ongoing Coding Contests
-    </h1>
-    <p class="text-slate-400">
-        Next 7 days · Local time · Famous platforms
-    </p>
-    <div id="status" class="mt-4 text-sm text-slate-500 italic">
-        Fetching contests...
+<div class="content-wrap max-w-5xl mx-auto px-4 md:px-8 py-10">
+
+  <!-- HEADER -->
+  <header class="mb-10 text-center">
+    <div class="inline-block mb-3 px-3 py-1 rounded-full bg-blue-950 border border-blue-800 text-blue-400 mono text-xs tracking-widest">
+      PWA · OFFLINE READY · AUTO-REFRESH
     </div>
-</header>
+    <h1 class="site-title text-4xl md:text-5xl mb-3">
+      Contest Tracker
+    </h1>
+    <p class="text-slate-400 text-sm">
+      Next 7 days &nbsp;·&nbsp; Local time &nbsp;·&nbsp; Codeforces + Major platforms
+    </p>
 
-<div id="contest-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+    <!-- Notification permission bar (shown when permission not granted) -->
+    <div id="notif-permission-bar" class="flex">
+      <span>🔔 Enable notifications to never miss a contest</span>
+      <button onclick="askNotifPermission()">Enable</button>
+    </div>
+
+    <!-- Lead time + status row -->
+    <div class="mt-4 flex flex-wrap justify-center items-center gap-3 text-sm text-slate-500">
+      <span class="mono text-xs" id="status">Fetching contests…</span>
+      <span class="text-slate-700">|</span>
+      <label class="flex items-center gap-2 text-slate-400 text-xs">
+        Notify
+        <select id="lead-select">
+          <option value="15">15 min</option>
+          <option value="30" selected>30 min</option>
+          <option value="60">1 hour</option>
+        </select>
+        before start
+      </label>
+    </div>
+  </header>
+
+  <!-- CONTEST GRID -->
+  <div id="contest-list" class="grid grid-cols-1 md:grid-cols-2 gap-5"></div>
 
 </div>
 
+<!-- Toast banner -->
+<div id="notif-banner"></div>
+
+<!-- ===================== SCRIPTS ===================== -->
 <script>
-/* ================= SERVICE WORKER ================= */
+/* ============ SERVICE WORKER ============ */
 if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js");
+  navigator.serviceWorker.register("sw.js").then(reg => {
+    console.log("[SW] Registered", reg.scope);
+  });
 }
 
-/* ================= CONFIG ================= */
+/* ============ CONFIG ============ */
 const USERNAME = "WhatADrag";
-const API_KEY = "c337ee2f074d30a050ba4bfab4e8664c6af388b0";
+const API_KEY  = "c337ee2f074d30a050ba4bfab4e8664c6af388b0";
 
 const API_URL =
-`https://clist.by/api/v4/contest/?username=${USERNAME}&api_key=${API_KEY}&upcoming=true&order_by=start`;
+  `https://clist.by/api/v4/contest/?username=${USERNAME}&api_key=${API_KEY}&upcoming=true&order_by=start`;
+
+// Codeforces public API (no auth needed)
+const CF_API_URL = "https://codeforces.com/api/contest.list?gym=false";
 
 const ALLOWED_PLATFORMS = [
-    "codeforces","codechef","atcoder","leetcode",
-    "hackerrank","hackerearth","topcoder","google","meta"
+  "codeforces","codechef","atcoder","leetcode",
+  "hackerrank","hackerearth","topcoder","google","meta"
 ];
 
-/* ================= DAILY COLORS (NO BLACK) ================= */
+/* ============ DAILY COLORS ============ */
 const DAILY_COLORS = [
-    "#3B3131","#696969","#808080","#A9A9A9",
-    "#FFD700","#FF8C00","#FF4500","#DC143C",
-    "#8A2BE2","#6A5ACD","#4169E1","#1E90FF",
-    "#00CED1","#20B2AA","#32CD32","#7FFF00",
-    "#FFFF00","#F4A460","#8B4513"
+  "#38bdf8","#818cf8","#34d399","#f59e0b","#fb7185",
+  "#a78bfa","#2dd4bf","#fb923c","#facc15","#4ade80"
 ];
 
 function getDailyColor() {
-    const today = new Date().toISOString().slice(0,10);
-    const saved = localStorage.getItem("dailyColor");
-
-    if (saved) {
-        const { date, color } = JSON.parse(saved);
-        if (date === today) return color;
-    }
-
-    const color = DAILY_COLORS[Math.floor(Math.random() * DAILY_COLORS.length)];
-    localStorage.setItem("dailyColor", JSON.stringify({ date: today, color }));
-    return color;
+  const today = new Date().toISOString().slice(0,10);
+  const saved = localStorage.getItem("dailyColor");
+  if (saved) {
+    const { date, color } = JSON.parse(saved);
+    if (date === today) return color;
+  }
+  const color = DAILY_COLORS[Math.floor(Math.random() * DAILY_COLORS.length)];
+  localStorage.setItem("dailyColor", JSON.stringify({ date: today, color }));
+  return color;
 }
 
 const BUTTON_COLOR = getDailyColor();
 
-/* ================= TIME HELPERS ================= */
+/* ============ TIME HELPERS ============ */
 function utcToLocal(dateStr) {
-    return new Date(dateStr + "Z"); // FORCE UTC
+  return new Date(dateStr + "Z");
 }
 
 function formatLocalTime(date) {
-    return date.toLocaleString(undefined, {
-        weekday: "short",
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-        timeZoneName: "short"
-    });
+  return date.toLocaleString(undefined, {
+    weekday: "short", month: "short", day: "numeric",
+    hour: "2-digit", minute: "2-digit", hour12: true, timeZoneName: "short"
+  });
 }
 
 function contestStatus(start, end) {
-    const now = new Date();
-    if (now >= start && now <= end) return "ONGOING";
-    if (now < start) {
-        const mins = Math.floor((start - now) / 60000);
-        if (mins < 60) return `Starts in ${mins} min`;
-        const hrs = Math.floor(mins / 60);
-        if (hrs < 24) return `Starts in ${hrs} hrs`;
-        return `Starts in ${Math.floor(hrs / 24)} days`;
-    }
-    return "Finished";
+  const now = new Date();
+  if (now >= start && now <= end) return "ONGOING";
+  if (now < start) {
+    const mins = Math.floor((start - now) / 60000);
+    if (mins < 60) return `${mins}m`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h`;
+    return `${Math.floor(hrs / 24)}d`;
+  }
+  return "Finished";
 }
 
-/* ================= FETCH DATA ================= */
-async function fetchContests() {
-    try {
-        const res = await fetch(API_URL);
-        const data = await res.json();
+/* ============ NOTIFICATION HELPERS ============ */
+const NOTIFY_KEY      = "notifyContests_v2";
+const NOTIFY_LEAD_KEY = "notifyLeadMins";
+const SCHEDULED_KEY   = "scheduledTimers"; // track scheduled contest IDs
 
-        const now = new Date();
-        const limit = new Date();
-        limit.setDate(now.getDate() + 7);
-
-        const contests = data.objects.filter(c => {
-            const start = utcToLocal(c.start);
-            const end = new Date(start.getTime() + c.duration * 1000);
-            const platform = c.resource.toLowerCase();
-
-            return end > now &&
-                   start <= limit &&
-                   ALLOWED_PLATFORMS.some(p => platform.includes(p));
-        });
-
-        contests.sort((a, b) =>
-            utcToLocal(a.start) - utcToLocal(b.start)
-        );
-
-        renderContests(contests);
-        document.getElementById("status").innerText =
-            `Showing ${contests.length} contests · Local time`;
-    } catch {
-        document.getElementById("status").innerText =
-            "Failed to load contests";
-    }
+function getNotifiedIds() {
+  return JSON.parse(localStorage.getItem(NOTIFY_KEY) || "[]");
+}
+function saveNotifiedIds(ids) {
+  localStorage.setItem(NOTIFY_KEY, JSON.stringify(ids));
+}
+function getLeadMins() {
+  return parseInt(localStorage.getItem(NOTIFY_LEAD_KEY) || "30");
 }
 
-/* ================= RENDER ================= */
-function renderContests(contests) {
-    const container = document.getElementById("contest-list");
-    container.innerHTML = "";
+// Show in-app toast
+function showToast(msg, duration = 3500) {
+  const el = document.getElementById("notif-banner");
+  el.textContent = msg;
+  el.style.display = "block";
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => { el.style.display = "none"; }, duration);
+}
 
-    if (!contests.length) {
-        container.innerHTML =
-            `<div class="col-span-full text-center text-slate-400">
-                No contests available 🚀
-            </div>`;
-        return;
+// Ask for notification permission
+async function askNotifPermission() {
+  if (!("Notification" in window)) {
+    showToast("⚠️ Notifications not supported on this browser");
+    return false;
+  }
+  if (Notification.permission === "granted") return true;
+  const result = await Notification.requestPermission();
+  if (result === "granted") {
+    document.getElementById("notif-permission-bar").style.display = "none";
+    showToast("✅ Notifications enabled!");
+    // Re-render so buttons are active
+    fetchAll();
+    return true;
+  } else {
+    showToast("❌ Permission denied. Enable in browser settings.");
+    return false;
+  }
+}
+
+// Fire a native notification
+function fireNotification(title, body) {
+  if (Notification.permission !== "granted") return;
+  const n = new Notification(title, {
+    body,
+    icon: "https://raw.githubusercontent.com/thisizsudip/contest-tracker/main/icon.png",
+    badge: "https://raw.githubusercontent.com/thisizsudip/contest-tracker/main/icon.png",
+    vibrate: [200, 100, 200],
+    tag: title // prevents duplicate notifications
+  });
+  n.onclick = () => { window.focus(); n.close(); };
+}
+
+// Schedule a notification for a contest
+const activeTimers = {}; // id -> timeoutId
+
+function scheduleNotification(id, name, platform, start) {
+  // Clear existing timer for this contest
+  if (activeTimers[id]) clearTimeout(activeTimers[id]);
+
+  const leadMs = getLeadMins() * 60 * 1000;
+  const delay  = start.getTime() - Date.now() - leadMs;
+
+  if (delay <= 0) {
+    // Contest is starting very soon or started — notify immediately if within window
+    if (start.getTime() - Date.now() > 0) {
+      fireNotification(
+        `⚡ ${name}`,
+        `Starting in < ${getLeadMins()} min · ${platform}`
+      );
     }
+    return;
+  }
 
-    contests.forEach(c => {
+  activeTimers[id] = setTimeout(() => {
+    fireNotification(
+      `⚡ ${name} starts in ${getLeadMins()} min`,
+      `Platform: ${platform}`
+    );
+    delete activeTimers[id];
+  }, delay);
+}
+
+// Toggle notify for a contest
+async function toggleNotify(id, name, platform, start, btn) {
+  if (Notification.permission !== "granted") {
+    const granted = await askNotifPermission();
+    if (!granted) return;
+  }
+
+  const ids = getNotifiedIds();
+  const idx = ids.indexOf(String(id));
+
+  if (idx === -1) {
+    ids.push(String(id));
+    saveNotifiedIds(ids);
+    scheduleNotification(id, name, platform, start);
+    btn.classList.add("active");
+    btn.innerHTML = `<span>🔔</span> Notifying`;
+    showToast(`🔔 You'll be notified ${getLeadMins()} min before "${name}"`);
+  } else {
+    ids.splice(idx, 1);
+    saveNotifiedIds(ids);
+    if (activeTimers[id]) { clearTimeout(activeTimers[id]); delete activeTimers[id]; }
+    btn.classList.remove("active");
+    btn.innerHTML = `<span>🔕</span> Notify Me`;
+    showToast(`🔕 Notification removed for "${name}"`);
+  }
+}
+
+// Re-schedule all saved notifications after page reload
+function restoreScheduledNotifications(allContests) {
+  const ids = getNotifiedIds();
+  allContests.forEach(c => {
+    if (ids.includes(String(c.id))) {
+      scheduleNotification(c.id, c.event, c.resource, c.startDate);
+    }
+  });
+}
+
+/* ============ UPDATE LEAD TIME ============ */
+document.getElementById("lead-select").addEventListener("change", e => {
+  localStorage.setItem(NOTIFY_LEAD_KEY, e.target.value);
+  // Reschedule all active notifications with new lead time
+  const ids = getNotifiedIds();
+  ids.forEach(id => {
+    const meta = window._contestMeta && window._contestMeta[id];
+    if (meta) scheduleNotification(id, meta.name, meta.platform, meta.start);
+  });
+  showToast(`⏱ Notification lead time: ${e.target.value} min`);
+});
+
+// Restore dropdown value
+document.getElementById("lead-select").value = getLeadMins();
+
+/* ============ SHOW PERMISSION BAR IF NEEDED ============ */
+function maybeShowPermissionBar() {
+  if ("Notification" in window && Notification.permission === "default") {
+    document.getElementById("notif-permission-bar").style.display = "flex";
+  }
+}
+maybeShowPermissionBar();
+
+/* ============ FETCH & MERGE DATA ============ */
+let allContestsGlobal = [];
+
+async function fetchAll() {
+  document.getElementById("status").textContent = "Fetching…";
+  try {
+    const [clistData, cfData] = await Promise.allSettled([
+      fetch(API_URL).then(r => r.json()),
+      fetch(CF_API_URL).then(r => r.json())
+    ]);
+
+    const now   = new Date();
+    const limit = new Date(); limit.setDate(now.getDate() + 7);
+
+    /* ---- CLIST contests ---- */
+    let clistContests = [];
+    if (clistData.status === "fulfilled") {
+      clistContests = (clistData.value.objects || []).filter(c => {
         const start = utcToLocal(c.start);
-        const end = new Date(start.getTime() + c.duration * 1000);
-        const status = contestStatus(start, end);
+        const end   = new Date(start.getTime() + c.duration * 1000);
+        const plat  = c.resource.toLowerCase();
+        return end > now && start <= limit &&
+          ALLOWED_PLATFORMS.some(p => plat.includes(p)) &&
+          !plat.includes("codeforces"); // CF handled separately
+      }).map(c => ({
+        id:        "clist_" + c.id,
+        event:     c.event,
+        resource:  c.resource,
+        href:      c.href,
+        startDate: utcToLocal(c.start),
+        endDate:   new Date(utcToLocal(c.start).getTime() + c.duration * 1000),
+        duration:  c.duration,
+        isCF:      false
+      }));
+    }
 
-        const badgeColor =
-            status === "ONGOING"
-                ? "bg-green-600 text-white"
-                : "bg-blue-900 text-blue-200";
+    /* ---- Codeforces contests ---- */
+    let cfContests = [];
+    if (cfData.status === "fulfilled" && cfData.value.status === "OK") {
+      cfContests = (cfData.value.result || []).filter(c => {
+        if (c.phase === "FINISHED") return false;
+        const start = new Date(c.startTimeSeconds * 1000);
+        return start <= limit; // include ONGOING + BEFORE within 7 days
+      }).map(c => {
+        const start = new Date(c.startTimeSeconds * 1000);
+        const end   = new Date((c.startTimeSeconds + c.durationSeconds) * 1000);
+        return {
+          id:        "cf_" + c.id,
+          event:     c.name,
+          resource:  "Codeforces",
+          href:      `https://codeforces.com/contest/${c.id}`,
+          startDate: start,
+          endDate:   end,
+          duration:  c.durationSeconds,
+          isCF:      true,
+          cfPhase:   c.phase
+        };
+      });
+    }
 
-        const card = document.createElement("div");
-        card.className =
-            "contest-card bg-slate-800 p-6 rounded-xl shadow-lg flex flex-col justify-between";
+    /* ---- Merge + sort ---- */
+    const all = [...cfContests, ...clistContests]
+      .sort((a, b) => a.startDate - b.startDate);
 
-        card.innerHTML = `
-        <div>
-            <div class="flex justify-between mb-4">
-                <span class="${badgeColor} text-xs font-bold px-2.5 py-0.5 rounded">
-                    ${status}
-                </span>
-                <span class="text-slate-400 text-xs">
-                    ${Math.floor(c.duration / 3600)} hrs
-                </span>
-            </div>
+    allContestsGlobal = all;
 
-            <h2 class="text-xl font-semibold mb-1">${c.event}</h2>
-            <p class="text-slate-400 text-sm">
-                Starts: ${formatLocalTime(start)}
-            </p>
-            <p class="text-slate-400 text-sm">
-                Ends: ${formatLocalTime(end)}
-            </p>
+    // Build meta map for re-scheduling
+    window._contestMeta = {};
+    all.forEach(c => {
+      window._contestMeta[c.id] = { name: c.event, platform: c.resource, start: c.startDate };
+    });
+
+    // Restore notifications
+    restoreScheduledNotifications(all);
+
+    renderContests(all);
+    document.getElementById("status").textContent =
+      `${all.length} contests · ${cfContests.length} from Codeforces · Local time`;
+
+  } catch(err) {
+    document.getElementById("status").textContent = "Failed to load — retrying…";
+    console.error(err);
+  }
+}
+
+/* ============ RENDER ============ */
+function renderContests(contests) {
+  const container = document.getElementById("contest-list");
+  container.innerHTML = "";
+
+  if (!contests.length) {
+    container.innerHTML = `
+      <div class="col-span-full text-center text-slate-500 py-20 mono text-sm">
+        No contests in the next 7 days 🚀
+      </div>`;
+    return;
+  }
+
+  const notifiedIds = getNotifiedIds();
+  const hasCF = contests.some(c => c.isCF);
+
+  // Section label for Codeforces
+  if (hasCF) {
+    const label = document.createElement("div");
+    label.className = "cf-section-label";
+    label.innerHTML = `⚡ CODEFORCES — AUTO-NOTIFIED`;
+    container.appendChild(label);
+  }
+
+  contests.forEach((c, i) => {
+    const status   = contestStatus(c.startDate, c.endDate);
+    const isLive   = status === "ONGOING";
+    const isNotif  = notifiedIds.includes(String(c.id));
+    const durationH = Math.round(c.duration / 3600);
+
+    const card = document.createElement("div");
+    card.className = "contest-card";
+    card.style.animationDelay = `${i * 0.05}s`;
+
+    // Badge
+    const badge = isLive
+      ? `<span class="badge-ongoing">● LIVE</span>`
+      : `<span class="badge-upcoming mono">${status}</span>`;
+
+    // Platform chip color
+    const platColor = c.isCF ? "#f59e0b" : "#38bdf8";
+
+    card.innerHTML = `
+      <div>
+        <div class="flex justify-between items-start mb-3">
+          ${badge}
+          <span class="mono text-xs" style="color:${platColor}">${c.resource}</span>
         </div>
 
-        <a href="${c.href}" target="_blank"
-           class="block mt-4 text-center font-bold py-2 px-4 rounded transition hover:scale-105 shadow-lg text-slate-900"
+        <h2 class="text-base font-bold leading-snug mb-3">${c.event}</h2>
+
+        <div class="space-y-1">
+          <p class="text-slate-400 text-xs mono">
+            ▶ ${formatLocalTime(c.startDate)}
+          </p>
+          <p class="text-slate-500 text-xs mono">
+            ■ ${formatLocalTime(c.endDate)}
+          </p>
+          <p class="text-slate-600 text-xs mono">
+            ⏱ ${durationH > 0 ? durationH + "h" : "<1h"} duration
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <a href="${c.href}" target="_blank" rel="noopener"
+           class="reg-btn"
            style="background:${BUTTON_COLOR}">
-            Register / View
+          Register / View →
         </a>
-        `;
-        container.appendChild(card);
-    });
+        ${
+          !isLive
+            ? `<button class="notify-btn ${isNotif ? "active" : ""}" id="notifbtn-${c.id}">
+                <span>${isNotif ? "🔔" : "🔕"}</span>
+                <span>${isNotif ? "Notifying" : "Notify Me"}</span>
+               </button>`
+            : `<button class="notify-btn" disabled>● Contest is Live</button>`
+        }
+      </div>
+    `;
+
+    // Wire up notify button
+    const btn = card.querySelector(`#notifbtn-${c.id}`);
+    if (btn) {
+      btn.addEventListener("click", () =>
+        toggleNotify(c.id, c.event, c.resource, c.startDate, btn)
+      );
+    }
+
+    container.appendChild(card);
+  });
 }
 
-fetchContests();
-setInterval(fetchContests, 30 * 60 * 1000);
+/* ============ AUTO-NOTIFY CODEFORCES ============ */
+// When CF contests load, automatically schedule notifications
+// for all of them if user has granted permission.
+// This is the "auto-available on every device where app is installed" feature.
+function autoNotifyCF(cfContests) {
+  if (Notification.permission !== "granted") return;
+
+  const ids = getNotifiedIds();
+  let added = 0;
+
+  cfContests.forEach(c => {
+    const sid = String(c.id);
+    if (!ids.includes(sid) && c.startDate > new Date()) {
+      ids.push(sid);
+      scheduleNotification(c.id, c.event, c.resource, c.startDate);
+      added++;
+    }
+  });
+
+  if (added > 0) {
+    saveNotifiedIds(ids);
+    showToast(`🔔 Auto-scheduled notifications for ${added} Codeforces contest(s)`);
+    // Re-render to reflect new state
+    renderContests(allContestsGlobal);
+  }
+}
+
+// Override fetchAll to call autoNotifyCF after load
+const _origFetchAll = fetchAll;
+window.fetchAll = async function() {
+  await _origFetchAll();
+  const cf = allContestsGlobal.filter(c => c.isCF);
+  autoNotifyCF(cf);
+};
+
+/* ============ BOOT ============ */
+fetchAll();
+setInterval(fetchAll, 30 * 60 * 1000); // Refresh every 30 min
 </script>
 </body>
 </html>
+
