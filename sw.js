@@ -1,9 +1,9 @@
 /* =====================================================
-   Contest Tracker — Service Worker
-   Handles: Caching, Push Notifications, Background Sync
+   Contest Tracker — Service Worker v4
+   Android-safe notification delivery
    ===================================================== */
 
-const CACHE = "contest-tracker-v3";
+const CACHE = "contest-tracker-v4";
 
 const FILES_TO_CACHE = [
   "./",
@@ -12,16 +12,14 @@ const FILES_TO_CACHE = [
   "https://raw.githubusercontent.com/thisizsudip/contest-tracker/main/icon.png"
 ];
 
+const ICON = "https://raw.githubusercontent.com/thisizsudip/contest-tracker/main/icon.png";
+
 /* ---------- INSTALL ---------- */
 self.addEventListener("install", e => {
   e.waitUntil(
-    caches.open(CACHE).then(cache => {
-      return Promise.allSettled(
-        FILES_TO_CACHE.map(url => cache.add(url).catch(() => {
-          console.warn("[SW] Could not cache:", url);
-        }))
-      );
-    })
+    caches.open(CACHE).then(cache =>
+      Promise.allSettled(FILES_TO_CACHE.map(url => cache.add(url).catch(() => {})))
+    )
   );
   self.skipWaiting();
 });
@@ -30,138 +28,144 @@ self.addEventListener("install", e => {
 self.addEventListener("activate", e => {
   e.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(
-        keys.filter(key => key !== CACHE)
-            .map(key => caches.delete(key))
-      )
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
     )
   );
   self.clients.claim();
 });
 
-/* ---------- FETCH (Cache-first, network fallback) ---------- */
+/* ---------- FETCH (cache-first, network fallback) ---------- */
 self.addEventListener("fetch", e => {
-  // Skip non-GET and cross-origin API requests (let them go to network)
   if (e.request.method !== "GET") return;
   const url = new URL(e.request.url);
+  // Never cache API calls — always hit network
   if (url.hostname === "clist.by" || url.hostname === "codeforces.com") return;
 
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
-      return fetch(e.request).then(response => {
-        // Cache fresh responses for app shell files
-        if (response && response.status === 200 && response.type === "basic") {
-          const clone = response.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
+      return fetch(e.request).then(res => {
+        if (res && res.status === 200 && res.type === "basic") {
+          caches.open(CACHE).then(c => c.put(e.request, res.clone()));
         }
-        return response;
-      }).catch(() => caches.match("./index.html")); // offline fallback
+        return res;
+      }).catch(() => caches.match("./index.html"));
     })
   );
 });
 
-/* ---------- PUSH NOTIFICATIONS ----------
-   Receives push events from a server (or from the client via
-   self.registration.showNotification called by the page).
-   This fires even when the tab is closed on mobile PWA installs.
-   ---------------------------------------------- */
-self.addEventListener("push", e => {
-  let payload = {
-    title: "⚡ Contest Alert",
-    body:  "A contest is starting soon!",
-    url:   "./"
-  };
-
-  if (e.data) {
-    try {
-      payload = { ...payload, ...e.data.json() };
-    } catch {
-      payload.body = e.data.text();
-    }
-  }
-
-  const options = {
-    body:    payload.body,
-    icon:    "https://raw.githubusercontent.com/thisizsudip/contest-tracker/main/icon.png",
-    badge:   "https://raw.githubusercontent.com/thisizsudip/contest-tracker/main/icon.png",
-    vibrate: [200, 100, 200, 100, 200],
-    tag:     payload.title, // collapse duplicates
-    renotify: true,
-    data:    { url: payload.url },
+/* ---------- SHOW A NOTIFICATION (called internally) ---------- */
+function showNotif(title, body, url) {
+  return self.registration.showNotification(title, {
+    body,
+    icon:     ICON,
+    badge:    ICON,
+    vibrate:  [200, 100, 200, 100, 200],
+    tag:      title,      // collapses duplicates with same title
+    renotify: true,       // re-alert even if same tag
+    data:     { url: url || "./" },
     actions: [
       { action: "view",    title: "View Contest" },
       { action: "dismiss", title: "Dismiss" }
     ]
-  };
+  });
+}
 
-  e.waitUntil(
-    self.registration.showNotification(payload.title, options)
-  );
+/* ---------- MESSAGE HANDLER ----------
+   The page sends three message types:
+
+   1. SHOW_NOTIFICATION — fire a notification right now.
+      Used by page-side setTimeout when timer fires.
+
+   2. UPDATE_SCHEDULE — page just updated the schedule,
+      store it in SW memory.
+
+   3. CHECK_SCHEDULE — heartbeat every 5 min from page.
+      SW checks the provided schedule for overdue entries
+      and fires them. This is the Android fallback that
+      catches any timers the OS killed.
+   ------------------------------------------ */
+
+// In-memory copy of the schedule (survives SW stay-alive window)
+let swSchedule = {};
+
+self.addEventListener("message", e => {
+  if (!e.data) return;
+
+  switch (e.data.type) {
+
+    case "SHOW_NOTIFICATION":
+      // Page timer fired and routed here — deliver immediately
+      showNotif(e.data.title, e.data.body, e.data.url);
+      break;
+
+    case "UPDATE_SCHEDULE":
+      // Page updated schedule (new contest added / removed / lead time changed)
+      swSchedule = e.data.schedule || {};
+      break;
+
+    case "CHECK_SCHEDULE": {
+      // Heartbeat: check for any overdue notifications
+      const schedule = e.data.schedule || swSchedule;
+      const now      = e.data.now || Date.now();
+      swSchedule = schedule;
+
+      Object.entries(schedule).forEach(([id, entry]) => {
+        // Fire if we're within 2 minutes past the scheduled fire time
+        // (the 2min window catches timers that fired slightly late)
+        const overdue = now >= entry.fireAtMs && now <= entry.fireAtMs + 2 * 60 * 1000;
+        if (overdue) {
+          showNotif(entry.title, entry.body, "./");
+        }
+      });
+      break;
+    }
+
+    case "SYNC_REFETCH":
+      // Tell all open tabs to re-fetch contests
+      self.clients.matchAll({ type: "window" }).then(tabs => {
+        tabs.forEach(tab => tab.postMessage({ type: "SYNC_REFETCH" }));
+      });
+      break;
+  }
+});
+
+/* ---------- PUSH (server-sent, future use) ---------- */
+self.addEventListener("push", e => {
+  let payload = { title: "⚡ Contest Alert", body: "A contest is starting soon!", url: "./" };
+  if (e.data) {
+    try { payload = { ...payload, ...e.data.json() }; }
+    catch { payload.body = e.data.text(); }
+  }
+  e.waitUntil(showNotif(payload.title, payload.body, payload.url));
 });
 
 /* ---------- NOTIFICATION CLICK ---------- */
 self.addEventListener("notificationclick", e => {
   e.notification.close();
-
   if (e.action === "dismiss") return;
 
-  const targetUrl = (e.notification.data && e.notification.data.url) || "./";
-
+  const target = (e.notification.data && e.notification.data.url) || "./";
   e.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true }).then(windowClients => {
-      // Focus existing tab if open
-      for (const client of windowClients) {
-        if (client.url.includes("contest-tracker") && "focus" in client) {
-          return client.focus();
-        }
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then(tabs => {
+      for (const tab of tabs) {
+        if (tab.url.includes("contest-tracker") && "focus" in tab) return tab.focus();
       }
-      // Otherwise open a new tab
-      if (clients.openWindow) {
-        return clients.openWindow(targetUrl);
-      }
+      if (clients.openWindow) return clients.openWindow(target);
     })
   );
 });
 
 /* ---------- NOTIFICATION CLOSE ---------- */
-self.addEventListener("notificationclose", e => {
-  console.log("[SW] Notification closed:", e.notification.tag);
-});
+self.addEventListener("notificationclose", () => {});
 
-/* ---------- BACKGROUND SYNC ----------
-   When the device comes back online, re-check for new CF contests.
-   The page registers a sync tag "check-contests" when it goes offline.
-   ---------------------------------------------- */
+/* ---------- BACKGROUND SYNC ---------- */
 self.addEventListener("sync", e => {
   if (e.tag === "check-contests") {
     e.waitUntil(
-      // Notify all open clients to re-fetch
-      clients.matchAll({ type: "window" }).then(tabs => {
+      self.clients.matchAll({ type: "window" }).then(tabs => {
         tabs.forEach(tab => tab.postMessage({ type: "SYNC_REFETCH" }));
       })
     );
-  }
-});
-
-/* ---------- MESSAGE HANDLER ----------
-   Receives messages from the page to show notifications
-   even when triggered by setTimeout in the client.
-   ---------------------------------------------- */
-self.addEventListener("message", e => {
-  if (!e.data) return;
-
-  // Page asks SW to show a notification (works on installed PWA even bg)
-  if (e.data.type === "SHOW_NOTIFICATION") {
-    const { title, body, url } = e.data;
-    self.registration.showNotification(title, {
-      body,
-      icon:    "https://raw.githubusercontent.com/thisizsudip/contest-tracker/main/icon.png",
-      badge:   "https://raw.githubusercontent.com/thisizsudip/contest-tracker/main/icon.png",
-      vibrate: [200, 100, 200],
-      tag:     title,
-      renotify: true,
-      data:    { url: url || "./" }
-    });
   }
 });
