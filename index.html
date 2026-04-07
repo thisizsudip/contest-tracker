@@ -8,7 +8,6 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f172a">
 
-<!-- Google Fonts: JetBrains Mono + Syne -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 
@@ -35,7 +34,6 @@
     overflow-x: hidden;
   }
 
-  /* Animated grid background */
   body::before {
     content: '';
     position: fixed;
@@ -48,14 +46,11 @@
     z-index: 0;
   }
 
-  /* Glowing orbs */
   body::after {
     content: '';
     position: fixed;
-    top: -200px;
-    right: -200px;
-    width: 600px;
-    height: 600px;
+    top: -200px; right: -200px;
+    width: 600px; height: 600px;
     background: radial-gradient(circle, rgba(56,189,248,0.07) 0%, transparent 70%);
     pointer-events: none;
     z-index: 0;
@@ -63,21 +58,15 @@
 
   .orb2 {
     position: fixed;
-    bottom: -200px;
-    left: -200px;
-    width: 500px;
-    height: 500px;
+    bottom: -200px; left: -200px;
+    width: 500px; height: 500px;
     background: radial-gradient(circle, rgba(129,140,248,0.07) 0%, transparent 70%);
     pointer-events: none;
     z-index: 0;
   }
 
-  .content-wrap {
-    position: relative;
-    z-index: 1;
-  }
+  .content-wrap { position: relative; z-index: 1; }
 
-  /* Header */
   .site-title {
     font-family: 'Syne', sans-serif;
     font-weight: 800;
@@ -90,7 +79,6 @@
 
   .mono { font-family: 'JetBrains Mono', monospace; }
 
-  /* Cards */
   .contest-card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -113,15 +101,12 @@
     to   { opacity:1; transform: translateY(0); }
   }
 
-  /* Badges */
   .badge-ongoing {
     background: linear-gradient(90deg,#16a34a,#15803d);
     color: #fff;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.65rem;
-    font-weight: 600;
-    padding: 2px 10px;
-    border-radius: 999px;
+    font-size: 0.65rem; font-weight: 600;
+    padding: 2px 10px; border-radius: 999px;
     letter-spacing: 0.05em;
     animation: pulse-green 2s infinite;
   }
@@ -135,201 +120,116 @@
     color: var(--accent);
     border: 1px solid rgba(56,189,248,0.25);
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.65rem;
-    font-weight: 600;
-    padding: 2px 10px;
-    border-radius: 999px;
+    font-size: 0.65rem; font-weight: 600;
+    padding: 2px 10px; border-radius: 999px;
     letter-spacing: 0.05em;
   }
 
-  /* Register button */
   .reg-btn {
-    display: block;
-    margin-top: 1rem;
+    display: block; margin-top: 1rem;
     text-align: center;
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    padding: 10px 16px;
-    border-radius: 10px;
+    font-family: 'Syne', sans-serif; font-weight: 700;
+    padding: 10px 16px; border-radius: 10px;
     transition: transform 0.2s, box-shadow 0.2s;
-    color: #0a0f1e;
-    text-decoration: none;
+    color: #0a0f1e; text-decoration: none;
   }
-  .reg-btn:hover {
-    transform: scale(1.03);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  }
+  .reg-btn:hover { transform: scale(1.03); box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
 
-  /* Notify button */
   .notify-btn {
-    margin-top: 8px;
-    width: 100%;
-    padding: 9px 16px;
-    border-radius: 10px;
+    margin-top: 8px; width: 100%;
+    padding: 9px 16px; border-radius: 10px;
     border: 1px solid var(--border);
-    background: transparent;
-    color: var(--muted);
-    font-family: 'Syne', sans-serif;
-    font-weight: 600;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
+    background: transparent; color: var(--muted);
+    font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.85rem;
+    cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
   }
-  .notify-btn:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-    background: rgba(56,189,248,0.05);
-  }
-  .notify-btn.active {
-    border-color: #f59e0b;
-    color: #f59e0b;
-    background: rgba(245,158,11,0.08);
-  }
-  .notify-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
+  .notify-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(56,189,248,0.05); }
+  .notify-btn.active { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,0.08); }
+  .notify-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  /* Notification banner */
   #notif-banner {
     display: none;
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
+    position: fixed; bottom: 24px; left: 50%;
     transform: translateX(-50%);
     z-index: 9999;
     background: #0f1729;
-    border: 1px solid var(--accent);
-    border-radius: 14px;
+    border: 1px solid var(--accent); border-radius: 14px;
     padding: 14px 22px;
     box-shadow: 0 0 40px rgba(56,189,248,0.2);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.82rem;
-    color: var(--accent);
-    white-space: nowrap;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.82rem;
+    color: var(--accent); white-space: nowrap;
     animation: slideUp 0.3s ease;
-    max-width: 90vw;
-    text-align: center;
+    max-width: 90vw; text-align: center;
   }
   @keyframes slideUp {
     from { opacity:0; transform: translateX(-50%) translateY(20px); }
     to   { opacity:1; transform: translateX(-50%) translateY(0); }
   }
 
-  /* Notification permission pill */
   #notif-permission-bar {
-    display: none;
-    margin-top: 12px;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
+    display: none; margin-top: 12px;
+    align-items: center; justify-content: center; gap: 10px;
     background: rgba(245,158,11,0.08);
-    border: 1px solid rgba(245,158,11,0.3);
-    border-radius: 12px;
-    padding: 10px 20px;
-    font-size: 0.85rem;
-    color: #fbbf24;
+    border: 1px solid rgba(245,158,11,0.3); border-radius: 12px;
+    padding: 10px 20px; font-size: 0.85rem; color: #fbbf24;
     font-family: 'JetBrains Mono', monospace;
   }
   #notif-permission-bar button {
-    background: #f59e0b;
-    color: #000;
-    border: none;
-    border-radius: 8px;
-    padding: 5px 14px;
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: opacity 0.2s;
+    background: #f59e0b; color: #000; border: none; border-radius: 8px;
+    padding: 5px 14px; font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: opacity 0.2s;
   }
   #notif-permission-bar button:hover { opacity: 0.85; }
 
-  /* Lead time selector */
   #lead-select {
-    background: rgba(56,189,248,0.07);
-    border: 1px solid rgba(56,189,248,0.2);
-    color: var(--accent);
-    border-radius: 8px;
-    padding: 4px 10px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.8rem;
-    cursor: pointer;
-    outline: none;
+    background: rgba(56,189,248,0.07); border: 1px solid rgba(56,189,248,0.2);
+    color: var(--accent); border-radius: 8px; padding: 4px 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
+    cursor: pointer; outline: none;
   }
   #lead-select option { background: #0f1729; color: #e2e8f0; }
 
-  /* Countdown chips */
-  .countdown-chip {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.7rem;
-    color: var(--muted);
-  }
-
-  /* Divider */
   .cf-section-label {
-    grid-column: 1 / -1;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-top: 8px;
-    color: #f59e0b;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.75rem;
-    letter-spacing: 0.1em;
+    grid-column: 1 / -1; display: flex; align-items: center; gap: 12px;
+    margin-top: 8px; color: #f59e0b;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.1em;
   }
-  .cf-section-label::after {
-    content:'';
-    flex:1;
-    height:1px;
-    background: rgba(245,158,11,0.2);
-  }
+  .cf-section-label::after { content:''; flex:1; height:1px; background: rgba(245,158,11,0.2); }
 
-  /* Scrollbar */
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
 
-  /* Staggered card animation */
-  .contest-card:nth-child(1)  { animation-delay: 0.05s }
-  .contest-card:nth-child(2)  { animation-delay: 0.10s }
-  .contest-card:nth-child(3)  { animation-delay: 0.15s }
-  .contest-card:nth-child(4)  { animation-delay: 0.20s }
-  .contest-card:nth-child(5)  { animation-delay: 0.25s }
-  .contest-card:nth-child(6)  { animation-delay: 0.30s }
-  .contest-card:nth-child(7)  { animation-delay: 0.35s }
-  .contest-card:nth-child(8)  { animation-delay: 0.40s }
+  .contest-card:nth-child(1) { animation-delay: 0.05s }
+  .contest-card:nth-child(2) { animation-delay: 0.10s }
+  .contest-card:nth-child(3) { animation-delay: 0.15s }
+  .contest-card:nth-child(4) { animation-delay: 0.20s }
+  .contest-card:nth-child(5) { animation-delay: 0.25s }
+  .contest-card:nth-child(6) { animation-delay: 0.30s }
+  .contest-card:nth-child(7) { animation-delay: 0.35s }
+  .contest-card:nth-child(8) { animation-delay: 0.40s }
 </style>
 </head>
 
 <body>
 <div class="orb2"></div>
-
 <div class="content-wrap max-w-5xl mx-auto px-4 md:px-8 py-10">
 
-  <!-- HEADER -->
   <header class="mb-10 text-center">
     <div class="inline-block mb-3 px-3 py-1 rounded-full bg-blue-950 border border-blue-800 text-blue-400 mono text-xs tracking-widest">
       PWA · OFFLINE READY · AUTO-REFRESH
     </div>
-    <h1 class="site-title text-4xl md:text-5xl mb-3">
-      Contest Tracker
-    </h1>
+    <h1 class="site-title text-4xl md:text-5xl mb-3">Contest Tracker</h1>
     <p class="text-slate-400 text-sm">
       Next 7 days &nbsp;·&nbsp; Local time &nbsp;·&nbsp; Codeforces + Major platforms
     </p>
 
-    <!-- Notification permission bar (shown when permission not granted) -->
     <div id="notif-permission-bar" class="flex">
       <span>🔔 Enable notifications to never miss a contest</span>
       <button onclick="askNotifPermission()">Enable</button>
     </div>
 
-    <!-- Lead time + status row -->
     <div class="mt-4 flex flex-wrap justify-center items-center gap-3 text-sm text-slate-500">
       <span class="mono text-xs" id="status">Fetching contests…</span>
       <span class="text-slate-700">|</span>
@@ -345,31 +245,47 @@
     </div>
   </header>
 
-  <!-- CONTEST GRID -->
   <div id="contest-list" class="grid grid-cols-1 md:grid-cols-2 gap-5"></div>
-
 </div>
 
-<!-- Toast banner -->
 <div id="notif-banner"></div>
 
-<!-- ===================== SCRIPTS ===================== -->
 <script>
-/* ============ SERVICE WORKER ============ */
+/* ============================================================
+   SERVICE WORKER REGISTRATION
+   We must wait for SW to control the page before routing
+   notifications through it. On Android, only SW-delivered
+   notifications work reliably in the background.
+   ============================================================ */
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js").then(reg => {
-    console.log("[SW] Registered", reg.scope);
+  navigator.serviceWorker.register("sw.js");
+
+  // Listen for SW telling us to refetch (background sync)
+  navigator.serviceWorker.addEventListener("message", e => {
+    if (e.data && e.data.type === "SYNC_REFETCH") init();
   });
 }
 
-/* ============ CONFIG ============ */
-const USERNAME = "WhatADrag";
-const API_KEY  = "c337ee2f074d30a050ba4bfab4e8664c6af388b0";
+// Helper: get the active SW controller, waiting if needed
+async function getSWController() {
+  if (!("serviceWorker" in navigator)) return null;
+  if (navigator.serviceWorker.controller) return navigator.serviceWorker.controller;
+  // Wait for SW to take control (up to 3s on first install)
+  return new Promise(resolve => {
+    const t = setTimeout(() => resolve(null), 3000);
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      clearTimeout(t);
+      resolve(navigator.serviceWorker.controller);
+    }, { once: true });
+  });
+}
 
-const API_URL =
-  `https://clist.by/api/v4/contest/?username=${USERNAME}&api_key=${API_KEY}&upcoming=true&order_by=start`;
-
-// Codeforces public API (no auth needed)
+/* ============================================================
+   CONFIG
+   ============================================================ */
+const USERNAME   = "WhatADrag";
+const API_KEY    = "c337ee2f074d30a050ba4bfab4e8664c6af388b0";
+const API_URL    = `https://clist.by/api/v4/contest/?username=${USERNAME}&api_key=${API_KEY}&upcoming=true&order_by=start`;
 const CF_API_URL = "https://codeforces.com/api/contest.list?gym=false";
 
 const ALLOWED_PLATFORMS = [
@@ -377,7 +293,9 @@ const ALLOWED_PLATFORMS = [
   "hackerrank","hackerearth","topcoder","google","meta"
 ];
 
-/* ============ DAILY COLORS ============ */
+/* ============================================================
+   DAILY BUTTON COLOR
+   ============================================================ */
 const DAILY_COLORS = [
   "#38bdf8","#818cf8","#34d399","#f59e0b","#fb7185",
   "#a78bfa","#2dd4bf","#fb923c","#facc15","#4ade80"
@@ -394,13 +312,12 @@ function getDailyColor() {
   localStorage.setItem("dailyColor", JSON.stringify({ date: today, color }));
   return color;
 }
-
 const BUTTON_COLOR = getDailyColor();
 
-/* ============ TIME HELPERS ============ */
-function utcToLocal(dateStr) {
-  return new Date(dateStr + "Z");
-}
+/* ============================================================
+   TIME HELPERS
+   ============================================================ */
+function utcToLocal(dateStr) { return new Date(dateStr + "Z"); }
 
 function formatLocalTime(date) {
   return date.toLocaleString(undefined, {
@@ -422,22 +339,24 @@ function contestStatus(start, end) {
   return "Finished";
 }
 
-/* ============ NOTIFICATION HELPERS ============ */
+/* ============================================================
+   STORAGE KEYS
+   ============================================================ */
 const NOTIFY_KEY      = "notifyContests_v2";
 const NOTIFY_LEAD_KEY = "notifyLeadMins";
-const SCHEDULED_KEY   = "scheduledTimers"; // track scheduled contest IDs
+// SW_SCHEDULE_KEY: full map of { id -> { title, body, fireAtMs } }
+// Written by the page, READ by sw.js for its periodic alarm check
+const SW_SCHEDULE_KEY = "sw_contest_schedule";
 
-function getNotifiedIds() {
-  return JSON.parse(localStorage.getItem(NOTIFY_KEY) || "[]");
-}
-function saveNotifiedIds(ids) {
-  localStorage.setItem(NOTIFY_KEY, JSON.stringify(ids));
-}
-function getLeadMins() {
-  return parseInt(localStorage.getItem(NOTIFY_LEAD_KEY) || "30");
-}
+function getNotifiedIds()        { return JSON.parse(localStorage.getItem(NOTIFY_KEY) || "[]"); }
+function saveNotifiedIds(ids)    { localStorage.setItem(NOTIFY_KEY, JSON.stringify(ids)); }
+function getLeadMins()           { return parseInt(localStorage.getItem(NOTIFY_LEAD_KEY) || "30"); }
+function getSchedule()           { return JSON.parse(localStorage.getItem(SW_SCHEDULE_KEY) || "{}"); }
+function saveSchedule(map)       { localStorage.setItem(SW_SCHEDULE_KEY, JSON.stringify(map)); }
 
-// Show in-app toast
+/* ============================================================
+   TOAST
+   ============================================================ */
 function showToast(msg, duration = 3500) {
   const el = document.getElementById("notif-banner");
   el.textContent = msg;
@@ -446,7 +365,9 @@ function showToast(msg, duration = 3500) {
   el._timer = setTimeout(() => { el.style.display = "none"; }, duration);
 }
 
-// Ask for notification permission
+/* ============================================================
+   PERMISSION
+   ============================================================ */
 async function askNotifPermission() {
   if (!("Notification" in window)) {
     showToast("⚠️ Notifications not supported on this browser");
@@ -457,60 +378,113 @@ async function askNotifPermission() {
   if (result === "granted") {
     document.getElementById("notif-permission-bar").style.display = "none";
     showToast("✅ Notifications enabled!");
-    // Re-render so buttons are active
-    fetchAll();
+    init();
     return true;
+  }
+  showToast("❌ Permission denied. Enable in browser settings.");
+  return false;
+}
+
+/* ============================================================
+   SEND NOTIFICATION — ANDROID SAFE
+   ============================================================
+   Problem: On Android Chrome, new Notification() called from
+   a setTimeout is killed when the screen turns off or the tab
+   goes to background. Android throttles JS timers aggressively.
+
+   Fix: Always route through ServiceWorkerRegistration.showNotification()
+   via postMessage to sw.js. The SW is a separate OS-level process
+   that Android does NOT throttle, so its notifications always fire.
+   ============================================================ */
+async function sendViaSW(title, body) {
+  if (Notification.permission !== "granted") return;
+
+  const ctrl = await getSWController();
+
+  if (ctrl) {
+    // PRIMARY PATH — SW delivers the notification (Android-safe)
+    ctrl.postMessage({ type: "SHOW_NOTIFICATION", title, body, url: "./" });
   } else {
-    showToast("❌ Permission denied. Enable in browser settings.");
-    return false;
+    // FALLBACK — direct Notification API (desktop only, fine on desktop)
+    const n = new Notification(title, {
+      body,
+      icon: "https://raw.githubusercontent.com/thisizsudip/contest-tracker/main/icon.png",
+      tag: title
+    });
+    n.onclick = () => { window.focus(); n.close(); };
   }
 }
 
-// Fire a native notification
-function fireNotification(title, body) {
-  if (Notification.permission !== "granted") return;
-  const n = new Notification(title, {
-    body,
-    icon: "https://raw.githubusercontent.com/thisizsudip/contest-tracker/main/icon.png",
-    badge: "https://raw.githubusercontent.com/thisizsudip/contest-tracker/main/icon.png",
-    vibrate: [200, 100, 200],
-    tag: title // prevents duplicate notifications
-  });
-  n.onclick = () => { window.focus(); n.close(); };
-}
+/* ============================================================
+   SCHEDULING — TWO LAYERS FOR ANDROID RELIABILITY
+   ============================================================
+   Layer 1 (page-side setTimeout → sendViaSW):
+     Precise timing. Works when screen is on / tab is visible.
+     setTimeout fires → postMessage to SW → SW calls showNotification().
 
-// Schedule a notification for a contest
-const activeTimers = {}; // id -> timeoutId
+   Layer 2 (SW periodic alarm via setInterval → CHECK_SCHEDULE):
+     Every 5 minutes the page sends the full schedule to the SW.
+     The SW checks for any overdue entries and fires them.
+     This catches Layer 1 timers that Android killed.
+   ============================================================ */
+const activeTimers = {};
 
-function scheduleNotification(id, name, platform, start) {
-  // Clear existing timer for this contest
+function scheduleNotification(id, name, platform, startDate) {
   if (activeTimers[id]) clearTimeout(activeTimers[id]);
 
-  const leadMs = getLeadMins() * 60 * 1000;
-  const delay  = start.getTime() - Date.now() - leadMs;
+  const leadMs   = getLeadMins() * 60 * 1000;
+  const fireAtMs = startDate.getTime() - leadMs;
+  const delay    = fireAtMs - Date.now();
+  const title    = `⚡ ${name} starts in ${getLeadMins()} min`;
+  const body     = `Platform: ${platform}`;
+
+  // Always persist to localStorage so Layer 2 (SW) can pick it up
+  const schedule = getSchedule();
+  schedule[String(id)] = { title, body, fireAtMs };
+  saveSchedule(schedule);
+
+  // Also tell SW immediately so it has the latest schedule
+  getSWController().then(ctrl => {
+    if (ctrl) ctrl.postMessage({ type: "UPDATE_SCHEDULE", schedule: getSchedule() });
+  });
 
   if (delay <= 0) {
-    // Contest is starting very soon or started — notify immediately if within window
-    if (start.getTime() - Date.now() > 0) {
-      fireNotification(
-        `⚡ ${name}`,
-        `Starting in < ${getLeadMins()} min · ${platform}`
-      );
-    }
+    // Fire immediately if contest hasn't started yet
+    if (startDate.getTime() > Date.now()) sendViaSW(`⚡ ${name} starting very soon!`, `Platform: ${platform}`);
     return;
   }
 
+  // Layer 1: page timer
   activeTimers[id] = setTimeout(() => {
-    fireNotification(
-      `⚡ ${name} starts in ${getLeadMins()} min`,
-      `Platform: ${platform}`
-    );
+    sendViaSW(title, body);
+    const s = getSchedule();
+    delete s[String(id)];
+    saveSchedule(s);
     delete activeTimers[id];
   }, delay);
 }
 
-// Toggle notify for a contest
-async function toggleNotify(id, name, platform, start, btn) {
+function cancelNotification(id) {
+  if (activeTimers[id]) { clearTimeout(activeTimers[id]); delete activeTimers[id]; }
+  const s = getSchedule();
+  delete s[String(id)];
+  saveSchedule(s);
+  getSWController().then(ctrl => {
+    if (ctrl) ctrl.postMessage({ type: "UPDATE_SCHEDULE", schedule: getSchedule() });
+  });
+}
+
+// Layer 2: push the schedule to SW every 5 min as a heartbeat
+setInterval(() => {
+  getSWController().then(ctrl => {
+    if (ctrl) ctrl.postMessage({ type: "CHECK_SCHEDULE", schedule: getSchedule(), now: Date.now() });
+  });
+}, 5 * 60 * 1000);
+
+/* ============================================================
+   TOGGLE NOTIFY BUTTON
+   ============================================================ */
+async function toggleNotify(id, name, platform, startDate, btn) {
   if (Notification.permission !== "granted") {
     const granted = await askNotifPermission();
     if (!granted) return;
@@ -522,54 +496,56 @@ async function toggleNotify(id, name, platform, start, btn) {
   if (idx === -1) {
     ids.push(String(id));
     saveNotifiedIds(ids);
-    scheduleNotification(id, name, platform, start);
+    scheduleNotification(id, name, platform, startDate);
     btn.classList.add("active");
     btn.innerHTML = `<span>🔔</span> Notifying`;
-    showToast(`🔔 You'll be notified ${getLeadMins()} min before "${name}"`);
+    showToast(`🔔 Notification set ${getLeadMins()} min before "${name}"`);
   } else {
     ids.splice(idx, 1);
     saveNotifiedIds(ids);
-    if (activeTimers[id]) { clearTimeout(activeTimers[id]); delete activeTimers[id]; }
+    cancelNotification(id);
     btn.classList.remove("active");
     btn.innerHTML = `<span>🔕</span> Notify Me`;
     showToast(`🔕 Notification removed for "${name}"`);
   }
 }
 
-// Re-schedule all saved notifications after page reload
+/* ============================================================
+   RESTORE NOTIFICATIONS ON PAGE LOAD
+   ============================================================ */
 function restoreScheduledNotifications(allContests) {
   const ids = getNotifiedIds();
   allContests.forEach(c => {
-    if (ids.includes(String(c.id))) {
+    if (ids.includes(String(c.id)) && c.startDate > new Date()) {
       scheduleNotification(c.id, c.event, c.resource, c.startDate);
     }
   });
 }
 
-/* ============ UPDATE LEAD TIME ============ */
+/* ============================================================
+   LEAD TIME SELECTOR
+   ============================================================ */
 document.getElementById("lead-select").addEventListener("change", e => {
   localStorage.setItem(NOTIFY_LEAD_KEY, e.target.value);
-  // Reschedule all active notifications with new lead time
   const ids = getNotifiedIds();
   ids.forEach(id => {
     const meta = window._contestMeta && window._contestMeta[id];
     if (meta) scheduleNotification(id, meta.name, meta.platform, meta.start);
   });
-  showToast(`⏱ Notification lead time: ${e.target.value} min`);
+  showToast(`⏱ Notification lead time set to ${e.target.value} min`);
 });
-
-// Restore dropdown value
 document.getElementById("lead-select").value = getLeadMins();
 
-/* ============ SHOW PERMISSION BAR IF NEEDED ============ */
-function maybeShowPermissionBar() {
-  if ("Notification" in window && Notification.permission === "default") {
-    document.getElementById("notif-permission-bar").style.display = "flex";
-  }
+/* ============================================================
+   PERMISSION BAR
+   ============================================================ */
+if ("Notification" in window && Notification.permission === "default") {
+  document.getElementById("notif-permission-bar").style.display = "flex";
 }
-maybeShowPermissionBar();
 
-/* ============ FETCH & MERGE DATA ============ */
+/* ============================================================
+   FETCH & MERGE CONTESTS
+   ============================================================ */
 let allContestsGlobal = [];
 
 async function fetchAll() {
@@ -583,7 +559,6 @@ async function fetchAll() {
     const now   = new Date();
     const limit = new Date(); limit.setDate(now.getDate() + 7);
 
-    /* ---- CLIST contests ---- */
     let clistContests = [];
     if (clistData.status === "fulfilled") {
       clistContests = (clistData.value.objects || []).filter(c => {
@@ -592,165 +567,57 @@ async function fetchAll() {
         const plat  = c.resource.toLowerCase();
         return end > now && start <= limit &&
           ALLOWED_PLATFORMS.some(p => plat.includes(p)) &&
-          !plat.includes("codeforces"); // CF handled separately
+          !plat.includes("codeforces");
       }).map(c => ({
-        id:        "clist_" + c.id,
-        event:     c.event,
-        resource:  c.resource,
-        href:      c.href,
-        startDate: utcToLocal(c.start),
-        endDate:   new Date(utcToLocal(c.start).getTime() + c.duration * 1000),
-        duration:  c.duration,
-        isCF:      false
+        id: "clist_" + c.id, event: c.event, resource: c.resource,
+        href: c.href, startDate: utcToLocal(c.start),
+        endDate: new Date(utcToLocal(c.start).getTime() + c.duration * 1000),
+        duration: c.duration, isCF: false
       }));
     }
 
-    /* ---- Codeforces contests ---- */
     let cfContests = [];
     if (cfData.status === "fulfilled" && cfData.value.status === "OK") {
       cfContests = (cfData.value.result || []).filter(c => {
         if (c.phase === "FINISHED") return false;
-        const start = new Date(c.startTimeSeconds * 1000);
-        return start <= limit; // include ONGOING + BEFORE within 7 days
+        return new Date(c.startTimeSeconds * 1000) <= limit;
       }).map(c => {
         const start = new Date(c.startTimeSeconds * 1000);
         const end   = new Date((c.startTimeSeconds + c.durationSeconds) * 1000);
         return {
-          id:        "cf_" + c.id,
-          event:     c.name,
-          resource:  "Codeforces",
-          href:      `https://codeforces.com/contest/${c.id}`,
-          startDate: start,
-          endDate:   end,
-          duration:  c.durationSeconds,
-          isCF:      true,
-          cfPhase:   c.phase
+          id: "cf_" + c.id, event: c.name, resource: "Codeforces",
+          href: `https://codeforces.com/contest/${c.id}`,
+          startDate: start, endDate: end, duration: c.durationSeconds,
+          isCF: true, cfPhase: c.phase
         };
       });
     }
 
-    /* ---- Merge + sort ---- */
-    const all = [...cfContests, ...clistContests]
-      .sort((a, b) => a.startDate - b.startDate);
-
+    const all = [...cfContests, ...clistContests].sort((a, b) => a.startDate - b.startDate);
     allContestsGlobal = all;
 
-    // Build meta map for re-scheduling
     window._contestMeta = {};
     all.forEach(c => {
       window._contestMeta[c.id] = { name: c.event, platform: c.resource, start: c.startDate };
     });
 
-    // Restore notifications
     restoreScheduledNotifications(all);
-
     renderContests(all);
+
     document.getElementById("status").textContent =
       `${all.length} contests · ${cfContests.length} from Codeforces · Local time`;
 
-  } catch(err) {
+    return cfContests;
+
+  } catch {
     document.getElementById("status").textContent = "Failed to load — retrying…";
-    console.error(err);
+    return [];
   }
 }
 
-/* ============ RENDER ============ */
-function renderContests(contests) {
-  const container = document.getElementById("contest-list");
-  container.innerHTML = "";
-
-  if (!contests.length) {
-    container.innerHTML = `
-      <div class="col-span-full text-center text-slate-500 py-20 mono text-sm">
-        No contests in the next 7 days 🚀
-      </div>`;
-    return;
-  }
-
-  const notifiedIds = getNotifiedIds();
-  const hasCF = contests.some(c => c.isCF);
-
-  // Section label for Codeforces
-  if (hasCF) {
-    const label = document.createElement("div");
-    label.className = "cf-section-label";
-    label.innerHTML = `⚡ CODEFORCES — AUTO-NOTIFIED`;
-    container.appendChild(label);
-  }
-
-  contests.forEach((c, i) => {
-    const status   = contestStatus(c.startDate, c.endDate);
-    const isLive   = status === "ONGOING";
-    const isNotif  = notifiedIds.includes(String(c.id));
-    const durationH = Math.round(c.duration / 3600);
-
-    const card = document.createElement("div");
-    card.className = "contest-card";
-    card.style.animationDelay = `${i * 0.05}s`;
-
-    // Badge
-    const badge = isLive
-      ? `<span class="badge-ongoing">● LIVE</span>`
-      : `<span class="badge-upcoming mono">${status}</span>`;
-
-    // Platform chip color
-    const platColor = c.isCF ? "#f59e0b" : "#38bdf8";
-
-    card.innerHTML = `
-      <div>
-        <div class="flex justify-between items-start mb-3">
-          ${badge}
-          <span class="mono text-xs" style="color:${platColor}">${c.resource}</span>
-        </div>
-
-        <h2 class="text-base font-bold leading-snug mb-3">${c.event}</h2>
-
-        <div class="space-y-1">
-          <p class="text-slate-400 text-xs mono">
-            ▶ ${formatLocalTime(c.startDate)}
-          </p>
-          <p class="text-slate-500 text-xs mono">
-            ■ ${formatLocalTime(c.endDate)}
-          </p>
-          <p class="text-slate-600 text-xs mono">
-            ⏱ ${durationH > 0 ? durationH + "h" : "<1h"} duration
-          </p>
-        </div>
-      </div>
-
-      <div class="mt-4">
-        <a href="${c.href}" target="_blank" rel="noopener"
-           class="reg-btn"
-           style="background:${BUTTON_COLOR}">
-          Register / View →
-        </a>
-        ${
-          !isLive
-            ? `<button class="notify-btn ${isNotif ? "active" : ""}" id="notifbtn-${c.id}">
-                <span>${isNotif ? "🔔" : "🔕"}</span>
-                <span>${isNotif ? "Notifying" : "Notify Me"}</span>
-               </button>`
-            : `<button class="notify-btn" disabled>● Contest is Live</button>`
-        }
-      </div>
-    `;
-
-    // Wire up notify button
-    const btn = card.querySelector(`#notifbtn-${c.id}`);
-    if (btn) {
-      btn.addEventListener("click", () =>
-        toggleNotify(c.id, c.event, c.resource, c.startDate, btn)
-      );
-    }
-
-    container.appendChild(card);
-  });
-}
-
-/* ============ AUTO-NOTIFY CODEFORCES ============ */
-// When CF contests load, automatically schedule notifications
-// for all of them if user has granted permission.
-// This is the "auto-available on every device where app is installed" feature.
+/* ============================================================
+   AUTO-NOTIFY ALL CODEFORCES CONTESTS
+   ============================================================ */
 function autoNotifyCF(cfContests) {
   if (Notification.permission !== "granted") return;
 
@@ -768,24 +635,104 @@ function autoNotifyCF(cfContests) {
 
   if (added > 0) {
     saveNotifiedIds(ids);
-    showToast(`🔔 Auto-scheduled notifications for ${added} Codeforces contest(s)`);
-    // Re-render to reflect new state
+    showToast(`🔔 Auto-scheduled ${added} Codeforces notification(s)`);
     renderContests(allContestsGlobal);
   }
 }
 
-// Override fetchAll to call autoNotifyCF after load
-const _origFetchAll = fetchAll;
-window.fetchAll = async function() {
-  await _origFetchAll();
-  const cf = allContestsGlobal.filter(c => c.isCF);
-  autoNotifyCF(cf);
-};
+/* ============================================================
+   RENDER
+   ============================================================ */
+function renderContests(contests) {
+  const container = document.getElementById("contest-list");
+  container.innerHTML = "";
 
-/* ============ BOOT ============ */
-fetchAll();
-setInterval(fetchAll, 30 * 60 * 1000); // Refresh every 30 min
+  if (!contests.length) {
+    container.innerHTML = `
+      <div class="col-span-full text-center text-slate-500 py-20 mono text-sm">
+        No contests in the next 7 days 🚀
+      </div>`;
+    return;
+  }
+
+  const notifiedIds = getNotifiedIds();
+
+  if (contests.some(c => c.isCF)) {
+    const label = document.createElement("div");
+    label.className = "cf-section-label";
+    label.innerHTML = `⚡ CODEFORCES — AUTO-NOTIFIED`;
+    container.appendChild(label);
+  }
+
+  contests.forEach((c, i) => {
+    const status    = contestStatus(c.startDate, c.endDate);
+    const isLive    = status === "ONGOING";
+    const isNotif   = notifiedIds.includes(String(c.id));
+    const durationH = Math.round(c.duration / 3600);
+    const platColor = c.isCF ? "#f59e0b" : "#38bdf8";
+
+    const card = document.createElement("div");
+    card.className = "contest-card";
+    card.style.animationDelay = `${i * 0.05}s`;
+
+    const badge = isLive
+      ? `<span class="badge-ongoing">● LIVE</span>`
+      : `<span class="badge-upcoming mono">${status}</span>`;
+
+    card.innerHTML = `
+      <div>
+        <div class="flex justify-between items-start mb-3">
+          ${badge}
+          <span class="mono text-xs" style="color:${platColor}">${c.resource}</span>
+        </div>
+        <h2 class="text-base font-bold leading-snug mb-3">${c.event}</h2>
+        <div class="space-y-1">
+          <p class="text-slate-400 text-xs mono">▶ ${formatLocalTime(c.startDate)}</p>
+          <p class="text-slate-500 text-xs mono">■ ${formatLocalTime(c.endDate)}</p>
+          <p class="text-slate-600 text-xs mono">⏱ ${durationH > 0 ? durationH + "h" : "<1h"} duration</p>
+        </div>
+      </div>
+      <div class="mt-4">
+        <a href="${c.href}" target="_blank" rel="noopener"
+           class="reg-btn" style="background:${BUTTON_COLOR}">
+          Register / View →
+        </a>
+        ${
+          !isLive
+            ? `<button class="notify-btn ${isNotif ? "active" : ""}" id="notifbtn-${c.id}">
+                <span>${isNotif ? "🔔" : "🔕"}</span>
+                <span>${isNotif ? "Notifying" : "Notify Me"}</span>
+               </button>`
+            : `<button class="notify-btn" disabled>● Contest is Live</button>`
+        }
+      </div>
+    `;
+
+    const btn = card.querySelector(`#notifbtn-${c.id}`);
+    if (btn) {
+      btn.addEventListener("click", () =>
+        toggleNotify(c.id, c.event, c.resource, c.startDate, btn)
+      );
+    }
+    container.appendChild(card);
+  });
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+async function init() {
+  const cfContests = await fetchAll();
+  autoNotifyCF(cfContests);
+}
+
+init();
+setInterval(async () => {
+  const cfContests = await fetchAll();
+  autoNotifyCF(cfContests);
+}, 30 * 60 * 1000);
 </script>
 </body>
 </html>
+
 
